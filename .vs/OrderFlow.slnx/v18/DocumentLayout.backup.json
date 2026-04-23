@@ -1,0 +1,824 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Sistemas_Csharp\\OrderFlow\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.application\\usecases\\processorderusecase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|solutionrelative:orderflow.application\\usecases\\processorderusecase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3E4AE151-744D-F0D8-C239-AF0A5C0204CA}|OrderFlow.Domain\\OrderFlow.Domain.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.domain\\entities\\order.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3E4AE151-744D-F0D8-C239-AF0A5C0204CA}|OrderFlow.Domain\\OrderFlow.Domain.csproj|solutionrelative:orderflow.domain\\entities\\order.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9FF271EA-BE69-EA67-A64E-94187ECB121E}|OrderFlow.Infrastructure\\OrderFlow.Infrastructure.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.infrastructure\\messaging\\kafkaordereventpublisher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9FF271EA-BE69-EA67-A64E-94187ECB121E}|OrderFlow.Infrastructure\\OrderFlow.Infrastructure.csproj|solutionrelative:orderflow.infrastructure\\messaging\\kafkaordereventpublisher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{21077759-E64F-35A7-08E8-7E9818902CE0}|OrderFlow.Worker\\OrderFlow.Worker.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.worker\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{21077759-E64F-35A7-08E8-7E9818902CE0}|OrderFlow.Worker\\OrderFlow.Worker.csproj|solutionrelative:orderflow.worker\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{21077759-E64F-35A7-08E8-7E9818902CE0}|OrderFlow.Worker\\OrderFlow.Worker.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.worker\\worker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{21077759-E64F-35A7-08E8-7E9818902CE0}|OrderFlow.Worker\\OrderFlow.Worker.csproj|solutionrelative:orderflow.worker\\worker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.application\\interfaces\\iordereventpublisher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|solutionrelative:orderflow.application\\interfaces\\iordereventpublisher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.application\\messaging\\ordercompletedintegrationevent.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|solutionrelative:orderflow.application\\messaging\\ordercompletedintegrationevent.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{21077759-E64F-35A7-08E8-7E9818902CE0}|OrderFlow.Worker\\OrderFlow.Worker.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.worker\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{21077759-E64F-35A7-08E8-7E9818902CE0}|OrderFlow.Worker\\OrderFlow.Worker.csproj|solutionrelative:orderflow.worker\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F9595A2E-212B-5D1E-DD5B-8C050981666F}|OrderFlow.Api\\OrderFlow.Api.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{F9595A2E-212B-5D1E-DD5B-8C050981666F}|OrderFlow.Api\\OrderFlow.Api.csproj|solutionrelative:orderflow.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.application\\messaging\\kafkasettings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|solutionrelative:orderflow.application\\messaging\\kafkasettings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F9595A2E-212B-5D1E-DD5B-8C050981666F}|OrderFlow.Api\\OrderFlow.Api.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F9595A2E-212B-5D1E-DD5B-8C050981666F}|OrderFlow.Api\\OrderFlow.Api.csproj|solutionrelative:orderflow.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.application\\usecases\\createorderusecase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|solutionrelative:orderflow.application\\usecases\\createorderusecase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3E4AE151-744D-F0D8-C239-AF0A5C0204CA}|OrderFlow.Domain\\OrderFlow.Domain.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.domain\\interfaces\\iunitofwork.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3E4AE151-744D-F0D8-C239-AF0A5C0204CA}|OrderFlow.Domain\\OrderFlow.Domain.csproj|solutionrelative:orderflow.domain\\interfaces\\iunitofwork.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3E4AE151-744D-F0D8-C239-AF0A5C0204CA}|OrderFlow.Domain\\OrderFlow.Domain.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.domain\\interfaces\\icorrelationcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3E4AE151-744D-F0D8-C239-AF0A5C0204CA}|OrderFlow.Domain\\OrderFlow.Domain.csproj|solutionrelative:orderflow.domain\\interfaces\\icorrelationcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9FF271EA-BE69-EA67-A64E-94187ECB121E}|OrderFlow.Infrastructure\\OrderFlow.Infrastructure.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.infrastructure\\observability\\correlationcontext .cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9FF271EA-BE69-EA67-A64E-94187ECB121E}|OrderFlow.Infrastructure\\OrderFlow.Infrastructure.csproj|solutionrelative:orderflow.infrastructure\\observability\\correlationcontext .cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F9595A2E-212B-5D1E-DD5B-8C050981666F}|OrderFlow.Api\\OrderFlow.Api.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.api\\middlewares\\correlationidmiddleware.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F9595A2E-212B-5D1E-DD5B-8C050981666F}|OrderFlow.Api\\OrderFlow.Api.csproj|solutionrelative:orderflow.api\\middlewares\\correlationidmiddleware.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3E4AE151-744D-F0D8-C239-AF0A5C0204CA}|OrderFlow.Domain\\OrderFlow.Domain.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.domain\\entities\\outboxmessage.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3E4AE151-744D-F0D8-C239-AF0A5C0204CA}|OrderFlow.Domain\\OrderFlow.Domain.csproj|solutionrelative:orderflow.domain\\entities\\outboxmessage.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.application\\messaging\\ordercreatedmessage.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|solutionrelative:orderflow.application\\messaging\\ordercreatedmessage.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.application\\interfaces\\icreateorderusecase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|solutionrelative:orderflow.application\\interfaces\\icreateorderusecase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F9595A2E-212B-5D1E-DD5B-8C050981666F}|OrderFlow.Api\\OrderFlow.Api.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.api\\controllers\\orderscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{F9595A2E-212B-5D1E-DD5B-8C050981666F}|OrderFlow.Api\\OrderFlow.Api.csproj|solutionrelative:orderflow.api\\controllers\\orderscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.application\\interfaces\\iprocessorderusecase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|solutionrelative:orderflow.application\\interfaces\\iprocessorderusecase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.application\\usecases\\publishoutboxmessagesusecase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|solutionrelative:orderflow.application\\usecases\\publishoutboxmessagesusecase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9FF271EA-BE69-EA67-A64E-94187ECB121E}|OrderFlow.Infrastructure\\OrderFlow.Infrastructure.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.infrastructure\\messaging\\rabbitmqintegrationmessagepublisher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9FF271EA-BE69-EA67-A64E-94187ECB121E}|OrderFlow.Infrastructure\\OrderFlow.Infrastructure.csproj|solutionrelative:orderflow.infrastructure\\messaging\\rabbitmqintegrationmessagepublisher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.application\\interfaces\\iintegrationmessagepublisher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|solutionrelative:orderflow.application\\interfaces\\iintegrationmessagepublisher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9FF271EA-BE69-EA67-A64E-94187ECB121E}|OrderFlow.Infrastructure\\OrderFlow.Infrastructure.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.infrastructure\\data\\outboxmessageconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9FF271EA-BE69-EA67-A64E-94187ECB121E}|OrderFlow.Infrastructure\\OrderFlow.Infrastructure.csproj|solutionrelative:orderflow.infrastructure\\data\\outboxmessageconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9FF271EA-BE69-EA67-A64E-94187ECB121E}|OrderFlow.Infrastructure\\OrderFlow.Infrastructure.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.infrastructure\\data\\orderflowdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9FF271EA-BE69-EA67-A64E-94187ECB121E}|OrderFlow.Infrastructure\\OrderFlow.Infrastructure.csproj|solutionrelative:orderflow.infrastructure\\data\\orderflowdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3E4AE151-744D-F0D8-C239-AF0A5C0204CA}|OrderFlow.Domain\\OrderFlow.Domain.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.domain\\interfaces\\iorderrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3E4AE151-744D-F0D8-C239-AF0A5C0204CA}|OrderFlow.Domain\\OrderFlow.Domain.csproj|solutionrelative:orderflow.domain\\interfaces\\iorderrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9FF271EA-BE69-EA67-A64E-94187ECB121E}|OrderFlow.Infrastructure\\OrderFlow.Infrastructure.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.infrastructure\\repositories\\orderrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9FF271EA-BE69-EA67-A64E-94187ECB121E}|OrderFlow.Infrastructure\\OrderFlow.Infrastructure.csproj|solutionrelative:orderflow.infrastructure\\repositories\\orderrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F9595A2E-212B-5D1E-DD5B-8C050981666F}|OrderFlow.Api\\OrderFlow.Api.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.api\\orderflow.api.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{F9595A2E-212B-5D1E-DD5B-8C050981666F}|OrderFlow.Api\\OrderFlow.Api.csproj|solutionrelative:orderflow.api\\orderflow.api.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{F9595A2E-212B-5D1E-DD5B-8C050981666F}|OrderFlow.Api\\OrderFlow.Api.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.api\\orderflow.api.csproj||{04B8AB82-A572-4FEF-95CE-5222444B6B64}|",
+      "RelativeMoniker": "D:0:0:{F9595A2E-212B-5D1E-DD5B-8C050981666F}|OrderFlow.Api\\OrderFlow.Api.csproj|solutionrelative:orderflow.api\\orderflow.api.csproj||{04B8AB82-A572-4FEF-95CE-5222444B6B64}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.application\\dtos\\processorderresult.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|solutionrelative:orderflow.application\\dtos\\processorderresult.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.application\\interfaces\\ipublishoutboxmessagesusecase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|solutionrelative:orderflow.application\\interfaces\\ipublishoutboxmessagesusecase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.application\\interfaces\\iordermessagepublisher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|solutionrelative:orderflow.application\\interfaces\\iordermessagepublisher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{21077759-E64F-35A7-08E8-7E9818902CE0}|OrderFlow.Worker\\OrderFlow.Worker.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.worker\\outboxpublisherworker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{21077759-E64F-35A7-08E8-7E9818902CE0}|OrderFlow.Worker\\OrderFlow.Worker.csproj|solutionrelative:orderflow.worker\\outboxpublisherworker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9FF271EA-BE69-EA67-A64E-94187ECB121E}|OrderFlow.Infrastructure\\OrderFlow.Infrastructure.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.infrastructure\\repositories\\outboxmessagerepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9FF271EA-BE69-EA67-A64E-94187ECB121E}|OrderFlow.Infrastructure\\OrderFlow.Infrastructure.csproj|solutionrelative:orderflow.infrastructure\\repositories\\outboxmessagerepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3E4AE151-744D-F0D8-C239-AF0A5C0204CA}|OrderFlow.Domain\\OrderFlow.Domain.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.domain\\interfaces\\ioutboxmessagerepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3E4AE151-744D-F0D8-C239-AF0A5C0204CA}|OrderFlow.Domain\\OrderFlow.Domain.csproj|solutionrelative:orderflow.domain\\interfaces\\ioutboxmessagerepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9FF271EA-BE69-EA67-A64E-94187ECB121E}|OrderFlow.Infrastructure\\OrderFlow.Infrastructure.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.infrastructure\\messaging\\rabbitmqordermessagepublisher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9FF271EA-BE69-EA67-A64E-94187ECB121E}|OrderFlow.Infrastructure\\OrderFlow.Infrastructure.csproj|solutionrelative:orderflow.infrastructure\\messaging\\rabbitmqordermessagepublisher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9FF271EA-BE69-EA67-A64E-94187ECB121E}|OrderFlow.Infrastructure\\OrderFlow.Infrastructure.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.infrastructure\\messaging\\rabbitmqsettings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9FF271EA-BE69-EA67-A64E-94187ECB121E}|OrderFlow.Infrastructure\\OrderFlow.Infrastructure.csproj|solutionrelative:orderflow.infrastructure\\messaging\\rabbitmqsettings.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9FF271EA-BE69-EA67-A64E-94187ECB121E}|OrderFlow.Infrastructure\\OrderFlow.Infrastructure.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.infrastructure\\repositories\\inmemoryorderrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9FF271EA-BE69-EA67-A64E-94187ECB121E}|OrderFlow.Infrastructure\\OrderFlow.Infrastructure.csproj|solutionrelative:orderflow.infrastructure\\repositories\\inmemoryorderrepository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3E4AE151-744D-F0D8-C239-AF0A5C0204CA}|OrderFlow.Domain\\OrderFlow.Domain.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.domain\\entities\\orderevent.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3E4AE151-744D-F0D8-C239-AF0A5C0204CA}|OrderFlow.Domain\\OrderFlow.Domain.csproj|solutionrelative:orderflow.domain\\entities\\orderevent.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3E4AE151-744D-F0D8-C239-AF0A5C0204CA}|OrderFlow.Domain\\OrderFlow.Domain.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.domain\\common\\baseentity.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3E4AE151-744D-F0D8-C239-AF0A5C0204CA}|OrderFlow.Domain\\OrderFlow.Domain.csproj|solutionrelative:orderflow.domain\\common\\baseentity.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9FF271EA-BE69-EA67-A64E-94187ECB121E}|OrderFlow.Infrastructure\\OrderFlow.Infrastructure.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.infrastructure\\data\\configurations\\common\\baseconfigutationtreino.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9FF271EA-BE69-EA67-A64E-94187ECB121E}|OrderFlow.Infrastructure\\OrderFlow.Infrastructure.csproj|solutionrelative:orderflow.infrastructure\\data\\configurations\\common\\baseconfigutationtreino.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9FF271EA-BE69-EA67-A64E-94187ECB121E}|OrderFlow.Infrastructure\\OrderFlow.Infrastructure.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.infrastructure\\data\\configurations\\common\\baseentityconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9FF271EA-BE69-EA67-A64E-94187ECB121E}|OrderFlow.Infrastructure\\OrderFlow.Infrastructure.csproj|solutionrelative:orderflow.infrastructure\\data\\configurations\\common\\baseentityconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9FF271EA-BE69-EA67-A64E-94187ECB121E}|OrderFlow.Infrastructure\\OrderFlow.Infrastructure.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.infrastructure\\data\\configurations\\ordereventconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9FF271EA-BE69-EA67-A64E-94187ECB121E}|OrderFlow.Infrastructure\\OrderFlow.Infrastructure.csproj|solutionrelative:orderflow.infrastructure\\data\\configurations\\ordereventconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9FF271EA-BE69-EA67-A64E-94187ECB121E}|OrderFlow.Infrastructure\\OrderFlow.Infrastructure.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.infrastructure\\data\\configurations\\orderconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9FF271EA-BE69-EA67-A64E-94187ECB121E}|OrderFlow.Infrastructure\\OrderFlow.Infrastructure.csproj|solutionrelative:orderflow.infrastructure\\data\\configurations\\orderconfiguration.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.application\\dtos\\createorderrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|solutionrelative:orderflow.application\\dtos\\createorderrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.application\\usecases\\getorderbyidusecase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|solutionrelative:orderflow.application\\usecases\\getorderbyidusecase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.application\\interfaces\\igetorderbyidusecase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|solutionrelative:orderflow.application\\interfaces\\igetorderbyidusecase.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.application\\dtos\\getorderbyidresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|solutionrelative:orderflow.application\\dtos\\getorderbyidresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|c:\\sistemas_csharp\\orderflow\\orderflow.application\\dtos\\ordereventdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{EBC0AA55-2BB4-6E0F-9144-908B4A5F70E7}|OrderFlow.Application\\OrderFlow.Application.csproj|solutionrelative:orderflow.application\\dtos\\ordereventdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 6,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{40ea2e6b-2121-4bb8-a43e-c83c04b51041}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "KafkaOrderEventPublisher.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Infrastructure\\Messaging\\KafkaOrderEventPublisher.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Infrastructure\\Messaging\\KafkaOrderEventPublisher.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Infrastructure\\Messaging\\KafkaOrderEventPublisher.cs",
+              "RelativeToolTip": "OrderFlow.Infrastructure\\Messaging\\KafkaOrderEventPublisher.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-16T15:46:23.581Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "OrderCompletedIntegrationEvent.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\Messaging\\OrderCompletedIntegrationEvent.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Application\\Messaging\\OrderCompletedIntegrationEvent.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\Messaging\\OrderCompletedIntegrationEvent.cs",
+              "RelativeToolTip": "OrderFlow.Application\\Messaging\\OrderCompletedIntegrationEvent.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-16T15:44:45.021Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "KafkaSettings.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\Messaging\\KafkaSettings.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Application\\Messaging\\KafkaSettings.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\Messaging\\KafkaSettings.cs",
+              "RelativeToolTip": "OrderFlow.Application\\Messaging\\KafkaSettings.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-16T15:42:43.145Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "CreateOrderUseCase.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\UseCases\\CreateOrderUseCase.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Application\\UseCases\\CreateOrderUseCase.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\UseCases\\CreateOrderUseCase.cs",
+              "RelativeToolTip": "OrderFlow.Application\\UseCases\\CreateOrderUseCase.cs",
+              "ViewState": "AgIAACIAAAAAAAAAAAArwC0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-08T15:57:13.266Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Worker\\Program.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Worker\\Program.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Worker\\Program.cs",
+              "RelativeToolTip": "OrderFlow.Worker\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAcAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-10T16:51:17.397Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "ProcessOrderUseCase.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\UseCases\\ProcessOrderUseCase.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Application\\UseCases\\ProcessOrderUseCase.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\UseCases\\ProcessOrderUseCase.cs",
+              "RelativeToolTip": "OrderFlow.Application\\UseCases\\ProcessOrderUseCase.cs",
+              "ViewState": "AgIAAEUAAAAAAAAAAAAAAFcAAABGAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-10T17:54:32.176Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "Worker.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Worker\\Worker.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Worker\\Worker.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Worker\\Worker.cs",
+              "RelativeToolTip": "OrderFlow.Worker\\Worker.cs",
+              "ViewState": "AgIAAFcAAAAAAAAAAAArwG4AAABDAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-10T16:51:06.633Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Order.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Domain\\Entities\\Order.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Domain\\Entities\\Order.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Domain\\Entities\\Order.cs",
+              "RelativeToolTip": "OrderFlow.Domain\\Entities\\Order.cs",
+              "ViewState": "AgIAAAsAAAAAAAAAAAA8wCoAAABRAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-08T14:54:36.091Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "IOrderEventPublisher.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\Interfaces\\IOrderEventPublisher.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Application\\Interfaces\\IOrderEventPublisher.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\Interfaces\\IOrderEventPublisher.cs",
+              "RelativeToolTip": "OrderFlow.Application\\Interfaces\\IOrderEventPublisher.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-16T15:45:19.992Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "ICorrelationContext.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Domain\\Interfaces\\ICorrelationContext.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Domain\\Interfaces\\ICorrelationContext.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Domain\\Interfaces\\ICorrelationContext.cs",
+              "RelativeToolTip": "OrderFlow.Domain\\Interfaces\\ICorrelationContext.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAuwAQAAAAPAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-15T15:39:09.083Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "CorrelationContext .cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Infrastructure\\Observability\\CorrelationContext .cs",
+              "RelativeDocumentMoniker": "OrderFlow.Infrastructure\\Observability\\CorrelationContext .cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Infrastructure\\Observability\\CorrelationContext .cs",
+              "RelativeToolTip": "OrderFlow.Infrastructure\\Observability\\CorrelationContext .cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-15T15:40:57.037Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "CorrelationIdMiddleware.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Api\\Middlewares\\CorrelationIdMiddleware.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Api\\Middlewares\\CorrelationIdMiddleware.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Api\\Middlewares\\CorrelationIdMiddleware.cs",
+              "RelativeToolTip": "OrderFlow.Api\\Middlewares\\CorrelationIdMiddleware.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAABoAAABBAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-15T15:42:23.001Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "IUnitOfWork.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Domain\\Interfaces\\IUnitOfWork.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Domain\\Interfaces\\IUnitOfWork.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Domain\\Interfaces\\IUnitOfWork.cs",
+              "RelativeToolTip": "OrderFlow.Domain\\Interfaces\\IUnitOfWork.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAuwAYAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-13T21:17:24.791Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Api\\appsettings.json",
+              "RelativeDocumentMoniker": "OrderFlow.Api\\appsettings.json",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Api\\appsettings.json",
+              "RelativeToolTip": "OrderFlow.Api\\appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAIwBAAAAAEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-04-08T15:42:28.93Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Worker\\appsettings.json",
+              "RelativeDocumentMoniker": "OrderFlow.Worker\\appsettings.json",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Worker\\appsettings.json",
+              "RelativeToolTip": "OrderFlow.Worker\\appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-04-10T18:03:30.336Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "OutboxMessage.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Domain\\Entities\\OutboxMessage.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Domain\\Entities\\OutboxMessage.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Domain\\Entities\\OutboxMessage.cs",
+              "RelativeToolTip": "OrderFlow.Domain\\Entities\\OutboxMessage.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAtwBUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-15T15:49:37.48Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "OrderCreatedMessage.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\Messaging\\OrderCreatedMessage.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Application\\Messaging\\OrderCreatedMessage.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\Messaging\\OrderCreatedMessage.cs",
+              "RelativeToolTip": "OrderFlow.Application\\Messaging\\OrderCreatedMessage.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAuwAIAAAARAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-08T18:49:58.927Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Api\\Program.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Api\\Program.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Api\\Program.cs",
+              "RelativeToolTip": "OrderFlow.Api\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAsAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-07T19:47:24.222Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "ICreateOrderUseCase.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\Interfaces\\ICreateOrderUseCase.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Application\\Interfaces\\ICreateOrderUseCase.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\Interfaces\\ICreateOrderUseCase.cs",
+              "RelativeToolTip": "OrderFlow.Application\\Interfaces\\ICreateOrderUseCase.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAuwAQAAAAVAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-16T15:29:15.573Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "IProcessOrderUseCase.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\Interfaces\\IProcessOrderUseCase.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Application\\Interfaces\\IProcessOrderUseCase.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\Interfaces\\IProcessOrderUseCase.cs",
+              "RelativeToolTip": "OrderFlow.Application\\Interfaces\\IProcessOrderUseCase.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAuwAYAAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-10T17:53:12.58Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "RabbitMqIntegrationMessagePublisher.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Infrastructure\\Messaging\\RabbitMqIntegrationMessagePublisher.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Infrastructure\\Messaging\\RabbitMqIntegrationMessagePublisher.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Infrastructure\\Messaging\\RabbitMqIntegrationMessagePublisher.cs",
+              "RelativeToolTip": "OrderFlow.Infrastructure\\Messaging\\RabbitMqIntegrationMessagePublisher.cs",
+              "ViewState": "AgIAABUAAAAAAAAAAAAYwA8AAABfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-14T20:04:19.813Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "IIntegrationMessagePublisher.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\Interfaces\\IIntegrationMessagePublisher.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Application\\Interfaces\\IIntegrationMessagePublisher.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\Interfaces\\IIntegrationMessagePublisher.cs",
+              "RelativeToolTip": "OrderFlow.Application\\Interfaces\\IIntegrationMessagePublisher.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAuwAMAAAAVAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-14T20:02:31.149Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "PublishOutboxMessagesUseCase.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\UseCases\\PublishOutboxMessagesUseCase.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Application\\UseCases\\PublishOutboxMessagesUseCase.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\UseCases\\PublishOutboxMessagesUseCase.cs",
+              "RelativeToolTip": "OrderFlow.Application\\UseCases\\PublishOutboxMessagesUseCase.cs",
+              "ViewState": "AgIAABMAAAAAAAAAAAAgwEsAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-14T20:08:37.646Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "OrdersController.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Api\\Controllers\\OrdersController.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Api\\Controllers\\OrdersController.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Api\\Controllers\\OrdersController.cs",
+              "RelativeToolTip": "OrderFlow.Api\\Controllers\\OrdersController.cs",
+              "ViewState": "AgIAAAoAAAAAAAAAAAAewBYAAABBAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-07T19:18:02.325Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
+              "Title": "OutboxMessageConfiguration.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Infrastructure\\Data\\OutboxMessageConfiguration.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Infrastructure\\Data\\OutboxMessageConfiguration.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Infrastructure\\Data\\OutboxMessageConfiguration.cs",
+              "RelativeToolTip": "OrderFlow.Infrastructure\\Data\\OutboxMessageConfiguration.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAABoAAAAhAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-13T19:14:37.653Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 25,
+              "Title": "OrderFlowDbContext.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Infrastructure\\Data\\OrderFlowDbContext.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Infrastructure\\Data\\OrderFlowDbContext.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Infrastructure\\Data\\OrderFlowDbContext.cs",
+              "RelativeToolTip": "OrderFlow.Infrastructure\\Data\\OrderFlowDbContext.cs",
+              "ViewState": "AgIAABAAAAAAAAAAAAAnwAoAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-07T20:50:21.398Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 27,
+              "Title": "OrderRepository.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Infrastructure\\Repositories\\OrderRepository.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Infrastructure\\Repositories\\OrderRepository.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Infrastructure\\Repositories\\OrderRepository.cs",
+              "RelativeToolTip": "OrderFlow.Infrastructure\\Repositories\\OrderRepository.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-08T15:40:35.757Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 28,
+              "Title": "OrderFlow.Api.csproj",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Api\\OrderFlow.Api.csproj",
+              "RelativeDocumentMoniker": "OrderFlow.Api\\OrderFlow.Api.csproj",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Api\\OrderFlow.Api.csproj",
+              "RelativeToolTip": "OrderFlow.Api\\OrderFlow.Api.csproj",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAABkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-04-08T17:20:02.552Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 29,
+              "Title": "OrderFlow.Api",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Api\\OrderFlow.Api.csproj",
+              "RelativeDocumentMoniker": "OrderFlow.Api\\OrderFlow.Api.csproj",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Api\\OrderFlow.Api.csproj",
+              "RelativeToolTip": "OrderFlow.Api\\OrderFlow.Api.csproj",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-04-15T12:27:15.798Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 31,
+              "Title": "IPublishOutboxMessagesUseCase.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\Interfaces\\IPublishOutboxMessagesUseCase.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Application\\Interfaces\\IPublishOutboxMessagesUseCase.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\Interfaces\\IPublishOutboxMessagesUseCase.cs",
+              "RelativeToolTip": "OrderFlow.Application\\Interfaces\\IPublishOutboxMessagesUseCase.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-14T20:07:11.754Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 26,
+              "Title": "IOrderRepository.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Domain\\Interfaces\\IOrderRepository.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Domain\\Interfaces\\IOrderRepository.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Domain\\Interfaces\\IOrderRepository.cs",
+              "RelativeToolTip": "OrderFlow.Domain\\Interfaces\\IOrderRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-13T21:21:03.834Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 30,
+              "Title": "ProcessOrderResult.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\Dtos\\ProcessOrderResult.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Application\\Dtos\\ProcessOrderResult.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\Dtos\\ProcessOrderResult.cs",
+              "RelativeToolTip": "OrderFlow.Application\\Dtos\\ProcessOrderResult.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-15T04:44:57.38Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 32,
+              "Title": "IOrderMessagePublisher.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\Interfaces\\IOrderMessagePublisher.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Application\\Interfaces\\IOrderMessagePublisher.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\Interfaces\\IOrderMessagePublisher.cs",
+              "RelativeToolTip": "OrderFlow.Application\\Interfaces\\IOrderMessagePublisher.cs",
+              "ViewState": "AgIAAAEAAAAAAAAAAAAcwAYAAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-08T18:51:31.868Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 33,
+              "Title": "OutboxPublisherWorker.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Worker\\OutboxPublisherWorker.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Worker\\OutboxPublisherWorker.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Worker\\OutboxPublisherWorker.cs",
+              "RelativeToolTip": "OrderFlow.Worker\\OutboxPublisherWorker.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABwAAAA8AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-14T20:12:45.404Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 34,
+              "Title": "OutboxMessageRepository.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Infrastructure\\Repositories\\OutboxMessageRepository.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Infrastructure\\Repositories\\OutboxMessageRepository.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Infrastructure\\Repositories\\OutboxMessageRepository.cs",
+              "RelativeToolTip": "OrderFlow.Infrastructure\\Repositories\\OutboxMessageRepository.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAuwB8AAAA2AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-13T19:15:58.309Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 35,
+              "Title": "IOutboxMessageRepository.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Domain\\Interfaces\\IOutboxMessageRepository.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Domain\\Interfaces\\IOutboxMessageRepository.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Domain\\Interfaces\\IOutboxMessageRepository.cs",
+              "RelativeToolTip": "OrderFlow.Domain\\Interfaces\\IOutboxMessageRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAuwAgAAAApAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-13T21:21:44.968Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 36,
+              "Title": "RabbitMqOrderMessagePublisher.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Infrastructure\\Messaging\\RabbitMqOrderMessagePublisher.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Infrastructure\\Messaging\\RabbitMqOrderMessagePublisher.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Infrastructure\\Messaging\\RabbitMqOrderMessagePublisher.cs",
+              "RelativeToolTip": "OrderFlow.Infrastructure\\Messaging\\RabbitMqOrderMessagePublisher.cs",
+              "ViewState": "AgIAAAIAAAAAAAAAAAAIwAgAAABHAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-08T19:08:31.49Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 37,
+              "Title": "RabbitMqSettings.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Infrastructure\\Messaging\\RabbitMqSettings.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Infrastructure\\Messaging\\RabbitMqSettings.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Infrastructure\\Messaging\\RabbitMqSettings.cs",
+              "RelativeToolTip": "OrderFlow.Infrastructure\\Messaging\\RabbitMqSettings.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAzAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-08T19:04:29.376Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 38,
+              "Title": "InMemoryOrderRepository.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Infrastructure\\Repositories\\InMemoryOrderRepository.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Infrastructure\\Repositories\\InMemoryOrderRepository.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Infrastructure\\Repositories\\InMemoryOrderRepository.cs",
+              "RelativeToolTip": "OrderFlow.Infrastructure\\Repositories\\InMemoryOrderRepository.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-08T15:52:33.566Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 39,
+              "Title": "OrderEvent.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Domain\\Entities\\OrderEvent.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Domain\\Entities\\OrderEvent.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Domain\\Entities\\OrderEvent.cs",
+              "RelativeToolTip": "OrderFlow.Domain\\Entities\\OrderEvent.cs",
+              "ViewState": "AgIAABAAAAAAAAAAAAAowBUAAAAMAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-08T14:58:27.909Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 40,
+              "Title": "BaseEntity.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Domain\\Common\\BaseEntity.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Domain\\Common\\BaseEntity.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Domain\\Common\\BaseEntity.cs",
+              "RelativeToolTip": "OrderFlow.Domain\\Common\\BaseEntity.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAowAgAAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-08T14:49:28.133Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 41,
+              "Title": "BaseConfigutationTreino.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Infrastructure\\Data\\Configurations\\Common\\BaseConfigutationTreino.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Infrastructure\\Data\\Configurations\\Common\\BaseConfigutationTreino.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Infrastructure\\Data\\Configurations\\Common\\BaseConfigutationTreino.cs",
+              "RelativeToolTip": "OrderFlow.Infrastructure\\Data\\Configurations\\Common\\BaseConfigutationTreino.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-08T14:31:11.318Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 42,
+              "Title": "BaseEntityConfiguration.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Infrastructure\\Data\\Configurations\\Common\\BaseEntityConfiguration.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Infrastructure\\Data\\Configurations\\Common\\BaseEntityConfiguration.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Infrastructure\\Data\\Configurations\\Common\\BaseEntityConfiguration.cs",
+              "RelativeToolTip": "OrderFlow.Infrastructure\\Data\\Configurations\\Common\\BaseEntityConfiguration.cs",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAwCIAAAAjAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-07T20:51:30.26Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 43,
+              "Title": "OrderEventConfiguration.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Infrastructure\\Data\\Configurations\\OrderEventConfiguration.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Infrastructure\\Data\\Configurations\\OrderEventConfiguration.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Infrastructure\\Data\\Configurations\\OrderEventConfiguration.cs",
+              "RelativeToolTip": "OrderFlow.Infrastructure\\Data\\Configurations\\OrderEventConfiguration.cs",
+              "ViewState": "AgIAAAgAAAAAAAAAAAAAwA8AAAAtAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-07T20:51:10.64Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 44,
+              "Title": "OrderConfiguration.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Infrastructure\\Data\\Configurations\\OrderConfiguration.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Infrastructure\\Data\\Configurations\\OrderConfiguration.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Infrastructure\\Data\\Configurations\\OrderConfiguration.cs",
+              "RelativeToolTip": "OrderFlow.Infrastructure\\Data\\Configurations\\OrderConfiguration.cs",
+              "ViewState": "AgIAABkAAAAAAAAAAAAAwCQAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-07T20:50:57.705Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 45,
+              "Title": "CreateOrderRequest.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\Dtos\\CreateOrderRequest.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Application\\Dtos\\CreateOrderRequest.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\Dtos\\CreateOrderRequest.cs",
+              "RelativeToolTip": "OrderFlow.Application\\Dtos\\CreateOrderRequest.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-07T19:53:49.09Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 46,
+              "Title": "GetOrderByIdUseCase.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\UseCases\\GetOrderByIdUseCase.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Application\\UseCases\\GetOrderByIdUseCase.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\UseCases\\GetOrderByIdUseCase.cs",
+              "RelativeToolTip": "OrderFlow.Application\\UseCases\\GetOrderByIdUseCase.cs",
+              "ViewState": "AgIAAB8AAAAAAAAAAAAUwCYAAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-07T19:46:48.773Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 47,
+              "Title": "IGetOrderByIdUseCase.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\Interfaces\\IGetOrderByIdUseCase.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Application\\Interfaces\\IGetOrderByIdUseCase.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\Interfaces\\IGetOrderByIdUseCase.cs",
+              "RelativeToolTip": "OrderFlow.Application\\Interfaces\\IGetOrderByIdUseCase.cs",
+              "ViewState": "AgIAAAEAAAAAAAAAAADwvwYAAAAkAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-07T19:46:01.756Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 48,
+              "Title": "GetOrderByIdResponse.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\Dtos\\GetOrderByIdResponse.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Application\\Dtos\\GetOrderByIdResponse.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\Dtos\\GetOrderByIdResponse.cs",
+              "RelativeToolTip": "OrderFlow.Application\\Dtos\\GetOrderByIdResponse.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-07T19:45:23.636Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 49,
+              "Title": "OrderEventDto.cs",
+              "DocumentMoniker": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\Dtos\\OrderEventDto.cs",
+              "RelativeDocumentMoniker": "OrderFlow.Application\\Dtos\\OrderEventDto.cs",
+              "ToolTip": "C:\\Sistemas_Csharp\\OrderFlow\\OrderFlow.Application\\Dtos\\OrderEventDto.cs",
+              "RelativeToolTip": "OrderFlow.Application\\Dtos\\OrderEventDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-07T19:44:42.889Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
