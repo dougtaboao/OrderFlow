@@ -37,7 +37,7 @@ namespace OrderFlow.Application.UseCases
                 request.UserId,
                 request.Amount);
 
-            var order = new Order(request.UserId, request.Amount);
+            var order = new Order(request.UserId, request.Amount, request.Type, request.Priority, request.ExternalReference);
 
             var integrationMessage = new OrderCreatedMessage
             {

@@ -1,0 +1,19 @@
+# Visual Studio
+.vs/
+**/.vs/
+*.vsidx
+
+# Build
+bin/
+obj/
+**/bin/
+**/obj/
+
+# User files
+*.user
+*.suo
+
+# Logs/temp
+*.log
+*.tmp
+*.cache

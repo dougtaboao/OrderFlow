@@ -13,6 +13,10 @@ namespace OrderFlow.Domain.Entities
         public OrderStatus Status { get; private set; }
         // public DateTime CreatedAt { get; private set; } criado na Classe Base após refatoração
 
+        public OrderType Type { get; private set; }
+        public OrderPriority Priority { get; private set; }
+        public string ExternalReference { get; private set; } = string.Empty;
+
         public byte[] RowVersion { get; private set; } = Array.Empty<byte>();
 
         public IReadOnlyCollection<OrderEvent> Events => _events.AsReadOnly();
@@ -21,7 +25,7 @@ namespace OrderFlow.Domain.Entities
         {
         }
 
-        public Order(Guid userId, decimal amount) : base(Guid.NewGuid())
+        public Order(Guid userId, decimal amount, OrderType type, OrderPriority priority, string externalReference) : base(Guid.NewGuid())
         {
             if (userId == Guid.Empty)
                 throw new ArgumentException("UserId inválido.");
@@ -29,9 +33,17 @@ namespace OrderFlow.Domain.Entities
             if (amount <= 0)
                 throw new ArgumentException("O valor da ordem deve ser maior que zero.");
 
+            if (string.IsNullOrWhiteSpace(externalReference))
+                throw new ArgumentException("ExternalReference deve ser informado.");
+
             // Id = Guid.NewGuid(); criado na Classe Base após refatoração
             UserId = userId;
             Amount = amount;
+
+            Type = type;
+            Priority = priority;
+            ExternalReference = externalReference;
+
             Status = OrderStatus.Created;
             // CreatedAt = DateTime.UtcNow; criado na Classe Base após refatoração
 

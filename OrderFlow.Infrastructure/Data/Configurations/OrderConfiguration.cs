@@ -22,6 +22,16 @@ namespace OrderFlow.Infrastructure.Data.Configurations
                    .HasPrecision(18, 2)
                    .IsRequired();
 
+            builder.Property(o => o.Type)
+                    .IsRequired();
+
+            builder.Property(o => o.Priority)
+                   .IsRequired();
+
+            builder.Property(o => o.ExternalReference)
+                   .HasMaxLength(100)
+                   .IsRequired();
+
             builder.Property(o => o.Status)
                    .IsRequired();
 
