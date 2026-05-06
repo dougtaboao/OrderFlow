@@ -74,7 +74,15 @@ builder.Services.AddSerilog((services, loggerConfiguration) =>
     }
     builder.Services.AddScoped<IOrderEventPublisher, KafkaOrderEventPublisher>();
 
-    builder.Services.AddHostedService<Worker>();
+    if (sqsSettings.Enabled)
+    {
+        builder.Services.AddHostedService<SqsWorker>();
+    }
+    else
+    {
+        builder.Services.AddHostedService<Worker>();
+
+    }
     builder.Services.AddHostedService<OutboxPublisherWorker>();
 
     builder.Services.AddScoped<IBuyOrderService, BuyOrderService>();
