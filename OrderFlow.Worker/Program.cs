@@ -47,6 +47,11 @@ builder.Services.AddSerilog((services, loggerConfiguration) =>
             .AddConsoleExporter();
     });
 
+    var sqsSettings = builder.Configuration
+    .GetSection("Sqs")
+    .Get<SqsSettings>() ?? new SqsSettings();
+
+    builder.Services.AddSingleton(sqsSettings);
     builder.Services.AddSingleton(rabbitMqSettings);
     builder.Services.AddSingleton(kafkaSettings);
 
@@ -59,7 +64,14 @@ builder.Services.AddSerilog((services, loggerConfiguration) =>
     builder.Services.AddScoped<IProcessOrderUseCase, ProcessOrderUseCase>();
     builder.Services.AddScoped<IPublishOutboxMessagesUseCase, PublishOutboxMessagesUseCase>();
 
-    builder.Services.AddScoped<IIntegrationMessagePublisher, RabbitMqIntegrationMessagePublisher>();
+    if (sqsSettings.Enabled)
+    {
+        builder.Services.AddScoped<IIntegrationMessagePublisher, SqsIntegrationMessagePublisher>();
+    }
+    else
+    {
+        builder.Services.AddScoped<IIntegrationMessagePublisher, RabbitMqIntegrationMessagePublisher>();
+    }
     builder.Services.AddScoped<IOrderEventPublisher, KafkaOrderEventPublisher>();
 
     builder.Services.AddHostedService<Worker>();
