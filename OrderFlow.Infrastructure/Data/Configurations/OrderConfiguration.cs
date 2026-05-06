@@ -45,6 +45,25 @@ namespace OrderFlow.Infrastructure.Data.Configurations
 
             builder.Property(o => o.RowVersion)
                     .IsRowVersion();
+
+            builder.Property(o => o.AssetCode)
+                   .HasMaxLength(20)
+                   .IsRequired(false);
+
+            builder.Property(o => o.Quantity)
+                   .IsRequired(false);
+
+            builder.Property(o => o.UnitPrice)
+                   .HasPrecision(18, 2)
+                   .IsRequired(false);
+
+            builder.Property(o => o.SourceAccount)
+                   .HasMaxLength(50)
+                   .IsRequired(false);
+
+            builder.Property(o => o.DestinationAccount)
+                   .HasMaxLength(50)
+                   .IsRequired(false);
         }
     }
 }

@@ -8,14 +8,19 @@ namespace OrderFlow.Domain.Entities
         private readonly List<OrderEvent> _events = new();
 
         // public Guid Id { get; private set; } criado na Classe Base após refatoração
+        // public DateTime CreatedAt { get; private set; } criado na Classe Base após refatoração
+
         public Guid UserId { get; private set; }
         public decimal Amount { get; private set; }
         public OrderStatus Status { get; private set; }
-        // public DateTime CreatedAt { get; private set; } criado na Classe Base após refatoração
-
         public OrderType Type { get; private set; }
         public OrderPriority Priority { get; private set; }
         public string ExternalReference { get; private set; } = string.Empty;
+        public string? AssetCode { get; private set; }
+        public int? Quantity { get; private set; }
+        public decimal? UnitPrice { get; private set; }
+        public string? SourceAccount { get; private set; }
+        public string? DestinationAccount { get; private set; }
 
         public byte[] RowVersion { get; private set; } = Array.Empty<byte>();
 
@@ -25,7 +30,8 @@ namespace OrderFlow.Domain.Entities
         {
         }
 
-        public Order(Guid userId, decimal amount, OrderType type, OrderPriority priority, string externalReference) : base(Guid.NewGuid())
+        public Order(Guid userId, decimal amount, OrderType type, OrderPriority priority, string externalReference,
+                        string? assetCode, int? quantity, decimal? unitPrice, string? sourceAccount, string? destinationAccount) : base(Guid.NewGuid())
         {
             if (userId == Guid.Empty)
                 throw new ArgumentException("UserId inválido.");
@@ -44,6 +50,12 @@ namespace OrderFlow.Domain.Entities
             Priority = priority;
             ExternalReference = externalReference;
 
+            AssetCode = assetCode;
+            Quantity = quantity;
+            UnitPrice = unitPrice;
+            SourceAccount = sourceAccount;
+            DestinationAccount = destinationAccount;
+
             Status = OrderStatus.Created;
             // CreatedAt = DateTime.UtcNow; criado na Classe Base após refatoração
 
@@ -52,12 +64,12 @@ namespace OrderFlow.Domain.Entities
 
         public bool CanBeProcessed()
         {
-            return Status == OrderStatus.Created || Status == OrderStatus.Failed;
+            return Status == OrderStatus.Created;
         }
 
         public void MarkAsProcessing(decimal amount)
         {
-            if (Status != OrderStatus.Created)
+            if (!CanBeProcessed())
                 throw new InvalidOperationException("Somente ordens criadas podem ir para processamento.");
 
             Status = OrderStatus.Processing;
