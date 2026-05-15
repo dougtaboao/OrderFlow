@@ -26,12 +26,6 @@ namespace OrderFlow.Worker
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            if (!_settings.Enabled)
-            {
-                _logger.LogInformation("SQS Worker desabilitado.");
-                return;
-            }
-
             if (string.IsNullOrWhiteSpace(_settings.QueueUrl))
                 throw new InvalidOperationException("QueueUrl do SQS não configurada.");
 
@@ -48,8 +42,22 @@ namespace OrderFlow.Worker
                     QueueUrl = _settings.QueueUrl,
                     MaxNumberOfMessages = _settings.MaxMessages,
                     WaitTimeSeconds = _settings.WaitTimeSeconds,
-                    MessageAttributeNames = new List<string> { "All" }
+                    MessageAttributeNames = new List<string> { "All" },
+                    AttributeNames = new List<string>
+                    {
+                        "ApproximateReceiveCount"
+                    }
                 }, stoppingToken);
+
+                if (response.Messages is null || response.Messages.Count == 0)
+                {
+                    _logger.LogDebug(
+                        "Nenhuma mensagem encontrada na fila SQS {QueueUrl} às {CheckedAt}",
+                        _settings.QueueUrl,
+                        DateTime.UtcNow);
+                    
+                    continue;
+                }
 
                 foreach (var sqsMessage in response.Messages)
                 {
@@ -72,12 +80,17 @@ namespace OrderFlow.Worker
 
             var processOrderUseCase = scope.ServiceProvider.GetRequiredService<IProcessOrderUseCase>();
 
+            var receiveCount = sqsMessage.Attributes.TryGetValue("ApproximateReceiveCount", out var count)
+                ? count
+                : "N/A";
+
             try
             {
                 _logger.LogInformation(
-                    "Mensagem SQS recebida. MessageId {MessageId}, CorrelationId {CorrelationId}",
+                    "Mensagem SQS recebida. MessageId {MessageId}, CorrelationId {CorrelationId}, ReceiveCount {ReceiveCount}",
                     sqsMessage.MessageId,
-                    correlationId);
+                    correlationId,
+                    receiveCount);
 
                 var message = JsonSerializer.Deserialize<OrderCreatedMessage>(sqsMessage.Body);
 
@@ -101,11 +114,13 @@ namespace OrderFlow.Worker
             {
                 _logger.LogError(
                     ex,
-                    "Erro ao processar mensagem SQS. MessageId {MessageId}",
+                    "Erro ao processar mensagem SQS. MessageId {MessageId}. A mensagem não será deletada e poderá ser reenviada pelo SQS.",
                     sqsMessage.MessageId);
 
-                // No SQS, se não deletar a mensagem, ela volta após o Visibility Timeout.
-                // A DLQ é configurada na AWS pela Redrive Policy.
+                // Importante:
+                // Não deletar a mensagem.
+                // O SQS irá reenviá-la após o Visibility Timeout.
+                // Após atingir maxReceiveCount, a AWS moverá a mensagem para a DLQ configurada.
             }
         }
 

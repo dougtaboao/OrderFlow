@@ -75,6 +75,15 @@ namespace OrderFlow.Application.UseCases
                 {
                     _logger.LogInformation("{Event} - Iniciando processamento da ordem", LogEvents.OrderProcessingStarted);
 
+                    if (order.Amount > 1000)
+                    {
+                        _logger.LogWarning(
+                            "Simulando falha para testes de retry/DLQ. OrderId {OrderId}",
+                            order.Id);
+
+                        throw new Exception("Falha simulada para retry e DLQ.");
+                    }
+
                     order.MarkAsProcessing(order.Amount);
                     await _unitOfWork.SaveChangesAsync(cancellationToken);
 

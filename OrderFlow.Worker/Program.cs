@@ -31,9 +31,17 @@ builder.Services.AddSerilog((services, loggerConfiguration) =>
     builder.Services.AddDbContext<OrderFlowDbContext>(options =>
         options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+    var messagingSettings = builder.Configuration
+    .GetSection("Messaging")
+    .Get<MessagingSettings>() ?? new MessagingSettings();
+
     var rabbitMqSettings = builder.Configuration
         .GetSection("RabbitMq")
         .Get<RabbitMqSettings>() ?? new RabbitMqSettings();
+
+    var sqsSettings = builder.Configuration
+    .GetSection("Sqs")
+    .Get<SqsSettings>() ?? new SqsSettings();
 
     var kafkaSettings = builder.Configuration
         .GetSection("Kafka")
@@ -47,10 +55,7 @@ builder.Services.AddSerilog((services, loggerConfiguration) =>
             .AddConsoleExporter();
     });
 
-    var sqsSettings = builder.Configuration
-    .GetSection("Sqs")
-    .Get<SqsSettings>() ?? new SqsSettings();
-
+    builder.Services.AddSingleton(messagingSettings);
     builder.Services.AddSingleton(sqsSettings);
     builder.Services.AddSingleton(rabbitMqSettings);
     builder.Services.AddSingleton(kafkaSettings);
@@ -64,25 +69,19 @@ builder.Services.AddSerilog((services, loggerConfiguration) =>
     builder.Services.AddScoped<IProcessOrderUseCase, ProcessOrderUseCase>();
     builder.Services.AddScoped<IPublishOutboxMessagesUseCase, PublishOutboxMessagesUseCase>();
 
-    if (sqsSettings.Enabled)
+    if (messagingSettings.Provider == MessagingProvider.Sqs)
     {
-        builder.Services.AddScoped<IIntegrationMessagePublisher, SqsIntegrationMessagePublisher>();
-    }
-    else
-    {
-        builder.Services.AddScoped<IIntegrationMessagePublisher, RabbitMqIntegrationMessagePublisher>();
-    }
-    builder.Services.AddScoped<IOrderEventPublisher, KafkaOrderEventPublisher>();
-
-    if (sqsSettings.Enabled)
-    {
+    Console.WriteLine($"Provider configurado: {messagingSettings.Provider}");
+    builder.Services.AddScoped<IIntegrationMessagePublisher, SqsIntegrationMessagePublisher>();
         builder.Services.AddHostedService<SqsWorker>();
     }
     else
     {
+    Console.WriteLine($"Provider configurado: {messagingSettings.Provider}");
+    builder.Services.AddScoped<IIntegrationMessagePublisher, RabbitMqIntegrationMessagePublisher>();
         builder.Services.AddHostedService<Worker>();
-
     }
+
     builder.Services.AddHostedService<OutboxPublisherWorker>();
 
     builder.Services.AddScoped<IBuyOrderService, BuyOrderService>();
@@ -94,6 +93,8 @@ builder.Services.AddSerilog((services, loggerConfiguration) =>
     builder.Services.AddScoped<IOrderProcessingStrategy, TransferOrderProcessingStrategy>();
 
     builder.Services.AddScoped<IOrderProcessingStrategyResolver, OrderProcessingStrategyResolver>();
+
+    builder.Services.AddScoped<IOrderEventPublisher, KafkaOrderEventPublisher>();
 
 var host = builder.Build();
     host.Run();
