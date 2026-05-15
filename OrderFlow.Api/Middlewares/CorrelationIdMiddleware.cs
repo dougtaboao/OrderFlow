@@ -22,6 +22,8 @@ namespace OrderFlow.Api.Middlewares
             if (string.IsNullOrWhiteSpace(correlationId))
                 correlationId = Guid.NewGuid().ToString();
 
+            _logger.LogInformation("CorrelationId gerado/capturado: {CorrelationId}", correlationId);
+
             correlationContext.Set(correlationId);
 
             context.Response.Headers[HeaderName] = correlationId;

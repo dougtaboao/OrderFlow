@@ -2,7 +2,9 @@
 using Microsoft.Extensions.Logging;
 using OrderFlow.Application.Interfaces;
 using OrderFlow.Application.Messaging;
+using OrderFlow.Application.Observability;
 using OrderFlow.Domain.Interfaces;
+using System.Diagnostics;
 
 namespace OrderFlow.Application.UseCases
 {
@@ -13,109 +15,145 @@ namespace OrderFlow.Application.UseCases
         private readonly ILogger<ProcessOrderUseCase> _logger;
         private readonly IOrderEventPublisher _orderEventPublisher;
         private readonly ICorrelationContext _correlationContext;
+        private readonly IOrderProcessingStrategyResolver _strategyResolver;
 
         public ProcessOrderUseCase(
             IOrderRepository orderRepository,
             IUnitOfWork unitOfWork,
             ILogger<ProcessOrderUseCase> logger,
             IOrderEventPublisher orderEventPublisher,
-            ICorrelationContext correlationContext)
+            ICorrelationContext correlationContext,
+            IOrderProcessingStrategyResolver strategyResolver)
         {
             _orderRepository = orderRepository;
             _unitOfWork = unitOfWork;
             _logger = logger;
             _orderEventPublisher = orderEventPublisher;
             _correlationContext = correlationContext;
+            _strategyResolver = strategyResolver;
         }
 
         public async Task ExecuteAsync(Guid orderId, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation("Iniciando processamento da ordem {OrderId}", orderId);
+            var stopwatch = Stopwatch.StartNew();
 
             var order = await _orderRepository.GetByIdAsync(orderId, cancellationToken);
 
-            if (order is null)
+            using var activity = Telemetry.ActivitySource.StartActivity("ProcessOrder");
+
+            activity?.SetTag("order.id", order.Id);
+            activity?.SetTag("order.type", order.Type.ToString());
+            activity?.SetTag("order.amount", order.Amount);
+
+            using (_logger.BeginScope(new Dictionary<string, object>
             {
-                _logger.LogWarning("Ordem {OrderId} não encontrada para processamento", orderId);
-                throw new InvalidOperationException($"Ordem {orderId} não encontrada.");
-            }
-
-            if (!order.CanBeProcessed())
+                [LogProperties.CorrelationId] = _correlationContext.CorrelationId,
+                [LogProperties.OrderId] = order.Id,
+                [LogProperties.UserId] = order.UserId,
+                [LogProperties.OrderType] = order.Type,
+                [LogProperties.Status] = order.Status,
+                [LogProperties.ExternalReference] = order.ExternalReference
+            }))
             {
-                _logger.LogWarning(
-                    "Ordem {OrderId} ignorada por idempotência. Status atual {Status}",
-                    order.Id,
-                    order.Status);
-
-                return;
-            }
-
-            try
-            {
-                order.MarkAsProcessing(order.Amount);
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-                _logger.LogInformation("Ordem {OrderId} movida para Processing", order.Id);
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                _logger.LogWarning(
-                    "Conflito de concorrência ao mover ordem {OrderId} para Processing",
-                    order.Id);
-
-                return;
-            }
-            catch (InvalidOperationException ex)
-            {
-                _logger.LogWarning(
-                    ex,
-                    "Transição inválida ao mover ordem {OrderId} para Processing",
-                    order.Id);
-
-                return;
-            }
-
-            await Task.Delay(2000, cancellationToken);
-
-            if (order.Amount > 1000)
-            {
-                _logger.LogError( 
-                    "Falha simulada para ordem {OrderId} com Amount {Amount}",
-                    order.Id,
-                    order.Amount);
-
-                order.MarkAsFailed("Falha simulada para testes de retry e DLQ.");
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
-                throw new Exception("Falha simulada para testes de retry e DLQ.");
-
-            }
-
-            try
-            {
-                order.MarkAsCompleted(order.Amount);
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-                var integrationEvent = new OrderCompletedIntegrationEvent
+                if (order is null)
                 {
-                    OrderId = order.Id,
-                    UserId = order.UserId,
-                    Amount = order.Amount,
-                    CompletedAt = DateTime.UtcNow,
-                    CorrelationId = _correlationContext.CorrelationId
-                };
+                    _logger.LogWarning("Ordem {OrderId} não encontrada para processamento", orderId);
+                    throw new InvalidOperationException($"Ordem {orderId} não encontrada.");
+                }
 
-                await _orderEventPublisher.PublishOrderCompletedAsync(integrationEvent, cancellationToken);
+                if (!order.CanBeProcessed())
+                {
+                    _logger.LogWarning(
+                        "{Event} - Ordem ignorada por idempotência. Status atual {Status}",
+                        LogEvents.OrderProcessingIgnored,
+                        order.Status);
 
-                _logger.LogInformation(
-                    "Ordem {OrderId} concluída com sucesso e evento publicado no Kafka",
-                    order.Id);
+                    return;
+                }
+
+                try
+                {
+                    _logger.LogInformation("{Event} - Iniciando processamento da ordem", LogEvents.OrderProcessingStarted);
+
+                    if (order.Amount > 1000)
+                    {
+                        _logger.LogWarning(
+                            "Simulando falha para testes de retry/DLQ. OrderId {OrderId}",
+                            order.Id);
+
+                        throw new Exception("Falha simulada para retry e DLQ.");
+                    }
+
+                    order.MarkAsProcessing(order.Amount);
+                    await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                    _logger.LogInformation("Ordem {OrderId} movida para Processing", order.Id);
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    Metrics.OrdersFailed.Add(1);
+                    _logger.LogWarning(
+                        "Conflito de concorrência ao mover ordem {OrderId} para Processing",
+                        order.Id);
+
+                    return;
+                }
+                catch (InvalidOperationException ex)
+                {
+                    Metrics.OrdersFailed.Add(1);
+
+                    _logger.LogWarning(
+                        ex,
+                        "Transição inválida ao mover ordem {OrderId} para Processing",
+                        order.Id);
+
+                    return;
+                }
+
+                await Task.Delay(2000, cancellationToken);
+
+                var strategy = _strategyResolver.Resolve(order.Type);
+
+                await strategy.ProcessAsync(order, cancellationToken);
+
+                try
+                {
+                    order.MarkAsCompleted(order.Amount);
+                    await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                    var integrationEvent = new OrderCompletedIntegrationEvent
+                    {
+                        OrderId = order.Id,
+                        UserId = order.UserId,
+                        Amount = order.Amount,
+                        CompletedAt = DateTime.UtcNow,
+                        CorrelationId = _correlationContext.CorrelationId
+                    };
+
+                    _logger.LogInformation(
+                        "{Event} - Ordem concluída com sucesso",
+                        LogEvents.OrderCompleted);
+
+                    await _orderEventPublisher.PublishOrderCompletedAsync(integrationEvent, cancellationToken);
+
+                    _logger.LogInformation(
+                        "{Event} - Evento OrderCompleted publicado no Kafka",
+                        LogEvents.KafkaEventPublished);
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    Metrics.OrdersFailed.Add(1);
+
+                    _logger.LogWarning(
+                        "Conflito de concorrência ao concluir ordem {OrderId}",
+                        order.Id);
+                }
             }
-            catch (DbUpdateConcurrencyException)
-            {
-                _logger.LogWarning(
-                    "Conflito de concorrência ao concluir ordem {OrderId}",
-                    order.Id);
-            }
+
+            stopwatch.Stop();
+
+            Metrics.OrderProcessingTime.Record(stopwatch.Elapsed.TotalMilliseconds);
+            Metrics.OrdersProcessed.Add(1);
         }
     }
 }

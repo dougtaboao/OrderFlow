@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using OrderFlow.Application.Interfaces;
+using OrderFlow.Application.Observability;
 using OrderFlow.Domain.Interfaces;
 
 namespace OrderFlow.Application.UseCases
@@ -39,14 +40,15 @@ namespace OrderFlow.Application.UseCases
             {
                 using (_logger.BeginScope(new Dictionary<string, object>
                 {
-                    ["CorrelationId"] = message.CorrelationId,
-                    ["OutboxMessageId"] = message.Id
+                    [LogProperties.CorrelationId] = message.CorrelationId,
+                    [LogProperties.OutboxMessageId] = message.Id
                 }))
                 {
                     try
                     {
                         _logger.LogInformation(
-                            "Publicando mensagem da outbox. Type {MessageType}",
+                            "{Event} - Publicando mensagem da outbox do tipo {MessageType}",
+                            LogEvents.OutboxPublishingStarted,
                             message.Type);
 
                         await _integrationMessagePublisher.PublishAsync(
@@ -57,13 +59,18 @@ namespace OrderFlow.Application.UseCases
 
                         message.MarkAsProcessed();
 
-                        _logger.LogInformation("Mensagem da outbox publicada com sucesso.");
+                        _logger.LogInformation(
+                            "{Event} - Mensagem da outbox publicada com sucesso",
+                            LogEvents.OutboxMessagePublished);
                     }
                     catch (Exception ex)
                     {
                         message.MarkAsFailed(ex.Message);
 
-                        _logger.LogError(ex, "Falha ao publicar mensagem da outbox.");
+                        _logger.LogError(
+                            ex,
+                            "{Event} - Falha ao publicar mensagem da outbox",
+                            LogEvents.OrderProcessingFailed);
                     }
 
                     _outboxMessageRepository.Update(message);

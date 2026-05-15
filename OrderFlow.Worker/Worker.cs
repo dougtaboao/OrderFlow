@@ -1,11 +1,12 @@
-using System.Text;
-using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using OrderFlow.Application.Interfaces;
 using OrderFlow.Application.Messaging;
+using OrderFlow.Application.Observability;
 using OrderFlow.Infrastructure.Messaging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using System.Text;
+using System.Text.Json;
 
 namespace OrderFlow.Worker
 {
@@ -85,14 +86,14 @@ namespace OrderFlow.Worker
 
                 using (_logger.BeginScope(new Dictionary<string, object>
                 {
-                    ["CorrelationId"] = correlationId,
-                    ["DeliveryTag"] = ea.DeliveryTag,
-                    ["QueueName"] = _settings.QueueName
+                    [LogProperties.CorrelationId] = correlationId,
+                    [LogProperties.QueueName] = _settings.QueueName,
+                    ["DeliveryTag"] = ea.DeliveryTag
                 }))
                 {
                     try
                     {
-                        _logger.LogInformation("Mensagem recebida da fila.");
+                        _logger.LogInformation("{Event} - Mensagem recebida do RabbitMQ", LogEvents.RabbitMessageReceived);
 
                         var body = ea.Body.ToArray();
                         var json = Encoding.UTF8.GetString(body);
@@ -132,15 +133,19 @@ namespace OrderFlow.Worker
                             await RepublishWithRetryAsync(ea, retryCount + 1, stoppingToken);
 
                             _logger.LogWarning(
-                                "Mensagem reenfileirada para retry {RetryCount}",
-                                retryCount + 1);
+                                 "{Event} - Mensagem reenfileirada para retry {RetryCount}",
+                                 LogEvents.MessageRetried,
+                                 retryCount + 1);
                         }
                         else
                         {
                             await PublishToDeadLetterQueueAsync(ea, stoppingToken);
 
+                            Metrics.OrdersFailed.Add(1);
+
                             _logger.LogError(
-                                "Mensagem enviada para DLQ após {RetryCount} tentativas",
+                                "{Event} - Mensagem enviada para DLQ após {RetryCount} tentativas",
+                                LogEvents.MessageSentToDlq,
                                 retryCount);
                         }
 

@@ -22,6 +22,16 @@ namespace OrderFlow.Infrastructure.Data.Configurations
                    .HasPrecision(18, 2)
                    .IsRequired();
 
+            builder.Property(o => o.Type)
+                    .IsRequired();
+
+            builder.Property(o => o.Priority)
+                   .IsRequired();
+
+            builder.Property(o => o.ExternalReference)
+                   .HasMaxLength(100)
+                   .IsRequired();
+
             builder.Property(o => o.Status)
                    .IsRequired();
 
@@ -35,6 +45,25 @@ namespace OrderFlow.Infrastructure.Data.Configurations
 
             builder.Property(o => o.RowVersion)
                     .IsRowVersion();
+
+            builder.Property(o => o.AssetCode)
+                   .HasMaxLength(20)
+                   .IsRequired(false);
+
+            builder.Property(o => o.Quantity)
+                   .IsRequired(false);
+
+            builder.Property(o => o.UnitPrice)
+                   .HasPrecision(18, 2)
+                   .IsRequired(false);
+
+            builder.Property(o => o.SourceAccount)
+                   .HasMaxLength(50)
+                   .IsRequired(false);
+
+            builder.Property(o => o.DestinationAccount)
+                   .HasMaxLength(50)
+                   .IsRequired(false);
         }
     }
 }

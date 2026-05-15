@@ -1,10 +1,12 @@
-﻿using System.Text.Json;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using OrderFlow.Application.Dtos;
 using OrderFlow.Application.Interfaces;
 using OrderFlow.Application.Messaging;
+using OrderFlow.Application.Observability;
 using OrderFlow.Domain.Entities;
 using OrderFlow.Domain.Interfaces;
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 
 namespace OrderFlow.Application.UseCases
 {
@@ -15,55 +17,98 @@ namespace OrderFlow.Application.UseCases
         private readonly IUnitOfWork _unitOfWork;
         private readonly ICorrelationContext _correlationContext;
         private readonly ILogger<CreateOrderUseCase> _logger;
+        private readonly ICreateOrderValidator _validator;
 
         public CreateOrderUseCase(
             IOrderRepository orderRepository,
             IOutboxMessageRepository outboxMessageRepository,
             IUnitOfWork unitOfWork,
             ICorrelationContext correlationContext,
-            ILogger<CreateOrderUseCase> logger)
+            ILogger<CreateOrderUseCase> logger,
+            ICreateOrderValidator validator)
         {
             _orderRepository = orderRepository;
             _outboxMessageRepository = outboxMessageRepository;
             _unitOfWork = unitOfWork;
             _correlationContext = correlationContext;
             _logger = logger;
+            _validator = validator;
         }
 
         public async Task<CreateOrderResponse> ExecuteAsync(CreateOrderRequest request, CancellationToken cancellationToken = default)
         {
-            _logger.LogInformation(
-                "Iniciando criação de ordem para UserId {UserId} com Amount {Amount}",
-                request.UserId,
-                request.Amount);
+            _validator.Validate(request);
 
-            var order = new Order(request.UserId, request.Amount);
-
-            var integrationMessage = new OrderCreatedMessage
+            using (_logger.BeginScope(new Dictionary<string, object>
             {
-                OrderId = order.Id
-            };
-
-            var outboxMessage = new OutboxMessage(
-                type: nameof(OrderCreatedMessage),
-                payload: JsonSerializer.Serialize(integrationMessage),
-                correlationId: _correlationContext.CorrelationId);
-
-            await _orderRepository.AddAsync(order, cancellationToken);
-            await _outboxMessageRepository.AddAsync(outboxMessage, cancellationToken);
-
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-            _logger.LogInformation(
-                "Ordem {OrderId} criada com sucesso e mensagem registrada na outbox",
-                order.Id);
-
-            return new CreateOrderResponse
+                [LogProperties.CorrelationId] = _correlationContext.CorrelationId,
+                [LogProperties.UserId] = request.UserId,
+                [LogProperties.OrderType] = request.Type,
+                [LogProperties.ExternalReference] = request.ExternalReference
+            }))
             {
-                OrderId = order.Id,
-                Status = order.Status.ToString(),
-                CreatedAt = order.CreatedAt
-            };
+                _logger.LogInformation("{Event} - Iniciando criação da ordem", LogEvents.OrderCreationStarted);
+
+                using var activity = Telemetry.ActivitySource.StartActivity("CreateOrder");
+
+                activity?.SetTag("order.type", request.Type.ToString());
+                activity?.SetTag("order.userId", request.UserId);
+                activity?.SetTag("order.externalReference", request.ExternalReference);
+
+                var order = new Order(
+                    request.UserId,
+                    request.Amount,
+                    request.Type,
+                    request.Priority,
+                    request.ExternalReference,
+                    request.AssetCode,
+                    request.Quantity,
+                    request.UnitPrice,
+                    request.SourceAccount,
+                    request.DestinationAccount);
+
+                var integrationMessage = new OrderCreatedMessage
+                {
+                    OrderId = order.Id
+                };
+
+                _logger.LogInformation(
+                    "CorrelationId no CreateOrderUseCase: {CorrelationId}",
+                    _correlationContext.CorrelationId);
+
+                var outboxMessage = new OutboxMessage(
+                    type: nameof(OrderCreatedMessage),
+                    payload: JsonSerializer.Serialize(integrationMessage), 
+                    correlationId : _correlationContext.CorrelationId);
+
+                await _orderRepository.AddAsync(order, cancellationToken);
+                await _outboxMessageRepository.AddAsync(outboxMessage, cancellationToken);
+
+                try
+                {
+                    await _unitOfWork.SaveChangesAsync(cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    var message = ex.InnerException?.Message ?? ex.Message;
+                    throw new Exception($"Erro ao salvar Order + Outbox: {message}", ex);
+                }
+
+                Metrics.OrdersCreated.Add(1);
+
+                _logger.LogInformation(
+                    "{Event} - Ordem {OrderId} criada e outbox {OutboxMessageId} registrada",
+                    LogEvents.OrderCreated,
+                    order.Id,
+                    outboxMessage.Id);
+
+                return new CreateOrderResponse
+                {
+                    OrderId = order.Id,
+                    Status = order.Status.ToString(),
+                    CreatedAt = order.CreatedAt
+                };
+            }
         }
     }
 }

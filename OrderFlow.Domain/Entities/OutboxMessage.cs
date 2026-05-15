@@ -28,6 +28,7 @@ namespace OrderFlow.Domain.Entities
 
             Type = type;
             Payload = payload;
+            CorrelationId = correlationId;
         }
 
         public void MarkAsProcessed()
