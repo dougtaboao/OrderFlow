@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+option csharp_namespace = "OrderFlow.Grpc.Protos";
+
+package orderflow;
+
+service OrderQuery {
+  rpc GetOrderById (GetOrderByIdRequest) returns (GetOrderByIdResponse);
+}
+
+message GetOrderByIdRequest {
+  string orderId = 1;
+}
+
+message GetOrderByIdResponse {
+  string orderId = 1;
+  string userId = 2;
+  double amount = 3;
+  string status = 4;
+  string type = 5;
+  string priority = 6;
+  string externalReference = 7;
+  string createdAt = 8;
+}
