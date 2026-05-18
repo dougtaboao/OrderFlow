@@ -1,4 +1,6 @@
-﻿using OrderFlow.Application.Dtos;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using OrderFlow.Application.Dtos;
 using OrderFlow.Application.Interfaces;
 using OrderFlow.Domain.Interfaces;
 
@@ -8,7 +10,7 @@ namespace OrderFlow.Application.UseCases
     {
         private readonly IOrderRepository _orderRepository;
 
-        public GetOrderByIdUseCase(IOrderRepository orderRepository)
+        public GetOrderByIdUseCase(IOrderRepository orderRepository, ILogger<ProcessOrderUseCase> logger)
         {
             _orderRepository = orderRepository;
         }
@@ -26,6 +28,14 @@ namespace OrderFlow.Application.UseCases
                 UserId = order.UserId,
                 Amount = order.Amount,
                 Status = order.Status.ToString(),
+                Type = order.Type.ToString(),
+                Priority = order.Priority.ToString(),
+                ExternalReference = order.ExternalReference,
+                AssetCode = order.AssetCode,
+                Quantity = order.Quantity,
+                UnitPrice = order.UnitPrice,
+                SourceAccount = order.SourceAccount,
+                DestinationAccount = order.DestinationAccount,
                 CreatedAt = order.CreatedAt,
                 Events = order.Events
                     .Select(e => new OrderEventDto

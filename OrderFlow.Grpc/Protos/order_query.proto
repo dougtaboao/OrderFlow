@@ -6,6 +6,7 @@ package orderflow;
 
 service OrderQuery {
   rpc GetOrderById (GetOrderByIdRequest) returns (GetOrderByIdResponse);
+  rpc WatchOrderStatus (WatchOrderStatusRequest) returns (stream OrderStatusUpdate);
 }
 
 message GetOrderByIdRequest {
@@ -20,5 +21,28 @@ message GetOrderByIdResponse {
   string type = 5;
   string priority = 6;
   string externalReference = 7;
-  string createdAt = 8;
+  string assetCode = 8;
+  int32 quantity = 9;
+  double unitPrice = 10;
+  string sourceAccount = 11;
+  string destinationAccount = 12;
+  string createdAt = 13;
+
+  repeated OrderEventResponse events = 14;
+}
+
+message OrderEventResponse {
+  string type = 1;
+  string description = 2;
+  string createdAt = 3;
+}
+
+message WatchOrderStatusRequest {
+  string orderId = 1;
+}
+
+message OrderStatusUpdate {
+  string orderId = 1;
+  string status = 2;
+  string updatedAt = 3;
 }

@@ -1,14 +1,27 @@
+using Microsoft.EntityFrameworkCore;
+using OrderFlow.Application.Interfaces;
+using OrderFlow.Application.UseCases;
+using OrderFlow.Domain.Interfaces;
 using OrderFlow.Grpc.Services;
+using OrderFlow.Infrastructure.Data;
+using OrderFlow.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddGrpc();
 
+builder.Services.AddScoped<IGetOrderByIdUseCase, GetOrderByIdUseCase>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+
+builder.Services.AddDbContext<OrderFlowDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-app.MapGrpcService<GreeterService>();
-app.MapGet("/", () => "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
+app.MapGrpcService<OrderQueryGrpcService>();
+
+app.MapGet("/", () => "OrderFlow gRPC service.");
 
 app.Run();
