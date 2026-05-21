@@ -114,13 +114,15 @@ if (messagingSettings.Provider == MessagingProvider.Sqs)
     builder.Services.AddScoped<ITransferOrderService, TransferOrderService>();
     builder.Services.AddHostedService<KafkaOrderCompletedAuditWorker>();
 
-builder.Services.AddScoped<IOrderProcessingStrategy, BuyOrderProcessingStrategy>();
+    builder.Services.AddScoped<IOrderProcessingStrategy, BuyOrderProcessingStrategy>();
     builder.Services.AddScoped<IOrderProcessingStrategy, SellOrderProcessingStrategy>();
     builder.Services.AddScoped<IOrderProcessingStrategy, TransferOrderProcessingStrategy>();
 
     builder.Services.AddScoped<IOrderProcessingStrategyResolver, OrderProcessingStrategyResolver>();
 
     builder.Services.AddScoped<IOrderEventPublisher, KafkaOrderEventPublisher>();
+
+    builder.Services.AddScoped<IOrderAuditReadModelRepository, OrderAuditReadModelRepository>();
 
     var host = builder.Build();
     host.Run();

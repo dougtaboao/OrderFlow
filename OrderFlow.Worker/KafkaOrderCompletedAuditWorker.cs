@@ -3,6 +3,8 @@ using System.Text.Json;
 using Confluent.Kafka;
 using OrderFlow.Application.Messaging;
 using OrderFlow.Infrastructure.Messaging;
+using OrderFlow.Domain.Interfaces;
+using OrderFlow.Domain.ReadModels;
 
 namespace OrderFlow.Worker
 {
@@ -10,13 +12,16 @@ namespace OrderFlow.Worker
     {
         private readonly ILogger<KafkaOrderCompletedAuditWorker> _logger;
         private readonly KafkaSettings _settings;
+        private readonly IServiceScopeFactory _scopeFactory;
 
         public KafkaOrderCompletedAuditWorker(
             ILogger<KafkaOrderCompletedAuditWorker> logger,
-            KafkaSettings settings)
+            KafkaSettings settings,
+            IServiceScopeFactory scopeFactory)
         {
             _logger = logger;
             _settings = settings;
+            _scopeFactory = scopeFactory;
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -24,7 +29,7 @@ namespace OrderFlow.Worker
             return Task.Run(() => ConsumeAsync(stoppingToken), stoppingToken);
         }
 
-        private void ConsumeAsync(CancellationToken stoppingToken)
+        private async void ConsumeAsync(CancellationToken stoppingToken)
         {
             var config = new ConsumerConfig
             {
@@ -36,7 +41,7 @@ namespace OrderFlow.Worker
 
             using var consumer = new ConsumerBuilder<string, string>(config).Build();
 
-            consumer.Subscribe(_settings.OrderCompletedTopic);
+            consumer.Subscribe(_settings.OrderStatusChangedTopic);
 
             _logger.LogInformation(
                 "Kafka audit consumer iniciado. Topic {Topic}, GroupId {GroupId}",
@@ -52,7 +57,8 @@ namespace OrderFlow.Worker
                     var correlationId = GetHeaderValue(result.Message.Headers, "correlation-id");
 
                     var integrationEvent =
-                        JsonSerializer.Deserialize<OrderCompletedIntegrationEvent>(result.Message.Value);
+                        JsonSerializer.Deserialize<OrderStatusChangedIntegrationEvent>(
+                        result.Message.Value);
 
                     if (integrationEvent is null)
                     {
@@ -65,6 +71,26 @@ namespace OrderFlow.Worker
                         consumer.Commit(result);
                         continue;
                     }
+
+                    using var scope = _scopeFactory.CreateScope();
+
+                    var repository = scope.ServiceProvider
+                        .GetRequiredService<IOrderAuditReadModelRepository>();
+
+                    var unitOfWork = scope.ServiceProvider
+                        .GetRequiredService<IUnitOfWork>();
+
+                    var readModel = new OrderAuditReadModel(
+                        integrationEvent.OrderId,
+                        integrationEvent.UserId,
+                        integrationEvent.Amount,
+                        "OrderCompleted",
+                        correlationId,
+                        integrationEvent.CompletedAt);
+
+                    await repository.AddAsync(readModel, stoppingToken);
+
+                    await unitOfWork.SaveChangesAsync(stoppingToken);
 
                     _logger.LogInformation(
                         "AUDIT - OrderCompleted consumido. OrderId {OrderId}, UserId {UserId}, Amount {Amount}, CorrelationId {CorrelationId}, Partition {Partition}, Offset {Offset}",

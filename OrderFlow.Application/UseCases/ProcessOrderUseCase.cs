@@ -87,18 +87,26 @@ namespace OrderFlow.Application.UseCases
                 {
                     _logger.LogInformation("{Event} - Iniciando processamento da ordem", LogEvents.OrderProcessingStarted);
 
-                    //if (order.Amount > 1000)
-                    //{
-                    //    _logger.LogWarning(
-                    //        "Simulando falha para testes de retry/DLQ. OrderId {OrderId}",
-                    //        order.Id);
-
-                    //    throw new Exception("Falha simulada para retry e DLQ.");
-                    //}
-
+                    var previousStatus = order.Status.ToString();
                     order.MarkAsProcessing(order.Amount);
                     await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                    await _orderEventPublisher.PublishOrderStatusChangedAsync(
+                        new OrderStatusChangedIntegrationEvent
+                        {
+                            OrderId = order.Id,
+                            UserId = order.UserId,
+                            Amount = order.Amount,
+                            PreviousStatus = previousStatus,
+                            NewStatus = order.Status.ToString(),
+                            OccurredAt = DateTime.UtcNow,
+                            CorrelationId = _correlationContext.CorrelationId
+                        },
+                        cancellationToken);
+
                     await _orderCacheService.RemoveAsync(order.Id, cancellationToken);
+
+                    previousStatus = order.Status.ToString();
 
 
                     _logger.LogInformation(
@@ -142,8 +150,27 @@ namespace OrderFlow.Application.UseCases
                         order.Id,
                         riskResult.Reason);
 
+                    var previousStatus = order.Status.ToString();
+
                     order.MarkAsFailed(riskResult.Reason);
                     await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                    await _orderEventPublisher.PublishOrderStatusChangedAsync(
+                        new OrderStatusChangedIntegrationEvent
+                        {
+                            OrderId = order.Id,
+                            UserId = order.UserId,
+                            Amount = order.Amount,
+                            PreviousStatus = previousStatus,
+                            NewStatus = order.Status.ToString(),
+                            Reason = riskResult.Reason,
+                            OccurredAt = DateTime.UtcNow,
+                            CorrelationId = _correlationContext.CorrelationId
+                        },
+                        cancellationToken);
+
+                    previousStatus = order.Status.ToString();
+
                     await _orderCacheService.RemoveAsync(order.Id, cancellationToken);
 
                     return;
@@ -151,8 +178,26 @@ namespace OrderFlow.Application.UseCases
 
                 try
                 {
+                    var previousStatus = order.Status.ToString();
+
                     order.MarkAsCompleted(order.Amount);
                     await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+                    await _orderEventPublisher.PublishOrderStatusChangedAsync(
+                        new OrderStatusChangedIntegrationEvent
+                        {
+                            OrderId = order.Id,
+                            UserId = order.UserId,
+                            Amount = order.Amount,
+                            PreviousStatus = previousStatus,
+                            NewStatus = order.Status.ToString(),
+                            OccurredAt = DateTime.UtcNow,
+                            CorrelationId = _correlationContext.CorrelationId
+                        },
+                        cancellationToken);
+
+                    previousStatus = order.Status.ToString();
+
                     await _orderCacheService.RemoveAsync(order.Id, cancellationToken);
 
                     var integrationEvent = new OrderCompletedIntegrationEvent

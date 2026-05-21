@@ -67,5 +67,34 @@ namespace OrderFlow.Infrastructure.Messaging
                     cancellationToken);
             });
         }
+
+        public async Task PublishOrderStatusChangedAsync(
+            OrderStatusChangedIntegrationEvent integrationEvent,
+            CancellationToken cancellationToken = default)
+        {
+            var config = new ProducerConfig
+            {
+                BootstrapServers = _settings.BootstrapServers
+            };
+
+            using var producer =
+                new ProducerBuilder<string, string>(config).Build();
+
+            var message = new Message<string, string>
+            {
+                Key = integrationEvent.OrderId.ToString(),
+                Value = JsonSerializer.Serialize(integrationEvent),
+                Headers = new Headers()
+            };
+
+            message.Headers.Add(
+                "correlation-id",
+                Encoding.UTF8.GetBytes(integrationEvent.CorrelationId));
+
+            await producer.ProduceAsync(
+                _settings.OrderStatusChangedTopic,
+                message,
+                cancellationToken);
+        }
     }
 }

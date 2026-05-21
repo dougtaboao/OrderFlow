@@ -4,5 +4,6 @@
     {
         public string BootstrapServers { get; set; } = "localhost:9092";
         public string OrderCompletedTopic { get; set; } = "order-completed";
+        public string OrderStatusChangedTopic { get; set; } = "order-status-changed";
     }
 }
