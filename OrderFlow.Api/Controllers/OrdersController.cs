@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using OrderFlow.Application.Dtos;
 using OrderFlow.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace OrderFlow.Api.Controllers
 {
@@ -17,6 +18,7 @@ namespace OrderFlow.Api.Controllers
             _createOrderUseCase = createOrderUseCase;
         }
 
+        [Authorize(Policy = "CanCreateOrder")]
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateOrderRequest request, CancellationToken cancellationToken)
         {
@@ -24,6 +26,7 @@ namespace OrderFlow.Api.Controllers
             return CreatedAtAction(nameof(GetById), new { id = response.OrderId }, response);
         }
 
+        [Authorize(Policy = "CanViewOrder")]
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
         {

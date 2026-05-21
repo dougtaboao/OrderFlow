@@ -4,7 +4,10 @@ namespace OrderFlow.Application.Dtos
 {
     public class CreateOrderRequest
     {
-        public Guid UserId { get; set; }
+        // public Guid UserId { get; set; } 
+        // UserId não vem mais do body
+        // UserId vem do token JWT validado
+
         public decimal Amount { get; set; }
         public OrderType Type { get; set; }
         public OrderPriority Priority { get; set; }

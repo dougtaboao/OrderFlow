@@ -1,16 +1,20 @@
 using Microsoft.EntityFrameworkCore;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using OrderFlow.Application.Interfaces;
 using OrderFlow.Application.Services.Orders;
 using OrderFlow.Application.Strategies;
 using OrderFlow.Application.UseCases;
 using OrderFlow.Domain.Interfaces;
+using OrderFlow.Infrastructure.Cache;
 using OrderFlow.Infrastructure.Data;
+using OrderFlow.Infrastructure.Gateways;
 using OrderFlow.Infrastructure.Messaging;
 using OrderFlow.Infrastructure.Observability;
 using OrderFlow.Infrastructure.Repositories;
 using OrderFlow.Worker;
 using Serilog;
+using StackExchange.Redis;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -55,6 +59,14 @@ builder.Services.AddSerilog((services, loggerConfiguration) =>
             .AddConsoleExporter();
     });
 
+    builder.Services.AddOpenTelemetry()
+    .WithMetrics(metrics =>
+    {
+        metrics
+            .AddMeter("OrderFlow")
+            .AddConsoleExporter();
+    });
+
     builder.Services.AddSingleton(messagingSettings);
     builder.Services.AddSingleton(sqsSettings);
     builder.Services.AddSingleton(rabbitMqSettings);
@@ -69,7 +81,9 @@ builder.Services.AddSerilog((services, loggerConfiguration) =>
     builder.Services.AddScoped<IProcessOrderUseCase, ProcessOrderUseCase>();
     builder.Services.AddScoped<IPublishOutboxMessagesUseCase, PublishOutboxMessagesUseCase>();
 
-    if (messagingSettings.Provider == MessagingProvider.Sqs)
+    builder.Services.AddScoped<IRiskAnalysisGateway, FakeRiskAnalysisGateway>();
+
+if (messagingSettings.Provider == MessagingProvider.Sqs)
     {
     Console.WriteLine($"Provider configurado: {messagingSettings.Provider}");
     builder.Services.AddScoped<IIntegrationMessagePublisher, SqsIntegrationMessagePublisher>();
@@ -82,13 +96,25 @@ builder.Services.AddSerilog((services, loggerConfiguration) =>
         builder.Services.AddHostedService<Worker>();
     }
 
+    var redisSettings = builder.Configuration
+    .GetSection("Redis")
+    .Get<RedisSettings>() ?? new RedisSettings();
+
+    builder.Services.AddSingleton(redisSettings);
+
+    builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
+        ConnectionMultiplexer.Connect(redisSettings.ConnectionString));
+
+    builder.Services.AddScoped<IOrderCacheService, RedisOrderCacheService>();
+
     builder.Services.AddHostedService<OutboxPublisherWorker>();
 
     builder.Services.AddScoped<IBuyOrderService, BuyOrderService>();
     builder.Services.AddScoped<ISellOrderService, SellOrderService>();
     builder.Services.AddScoped<ITransferOrderService, TransferOrderService>();
+    builder.Services.AddHostedService<KafkaOrderCompletedAuditWorker>();
 
-    builder.Services.AddScoped<IOrderProcessingStrategy, BuyOrderProcessingStrategy>();
+builder.Services.AddScoped<IOrderProcessingStrategy, BuyOrderProcessingStrategy>();
     builder.Services.AddScoped<IOrderProcessingStrategy, SellOrderProcessingStrategy>();
     builder.Services.AddScoped<IOrderProcessingStrategy, TransferOrderProcessingStrategy>();
 
@@ -96,5 +122,5 @@ builder.Services.AddSerilog((services, loggerConfiguration) =>
 
     builder.Services.AddScoped<IOrderEventPublisher, KafkaOrderEventPublisher>();
 
-var host = builder.Build();
+    var host = builder.Build();
     host.Run();

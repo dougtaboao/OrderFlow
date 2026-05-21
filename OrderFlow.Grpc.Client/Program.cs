@@ -34,8 +34,8 @@ Console.WriteLine($"Type: {response.Type}");
 Console.WriteLine($"Priority: {response.Priority}");
 Console.WriteLine($"ExternalReference: {response.ExternalReference}");
 Console.WriteLine($"CreatedAt: {response.CreatedAt}");
-
 Console.WriteLine("Eventos:");
+
 foreach (var ev in response.Events)
 {
     Console.WriteLine($"- {ev.Type} | {ev.Description} | {ev.CreatedAt}");

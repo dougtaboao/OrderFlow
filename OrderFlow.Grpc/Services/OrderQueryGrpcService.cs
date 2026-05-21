@@ -30,8 +30,9 @@ namespace OrderFlow.Grpc.Services
                 throw new RpcException(new Status(StatusCode.NotFound, "Ordem não encontrada."));
 
             _logger.LogInformation(
-                "Consulta gRPC realizada para OrderId {OrderId}",
-                orderId);
+                "Consulta gRPC realizada para OrderId {OrderId}, Status {Status}",
+                orderId,
+                order.Status);
 
             var response = new GetOrderByIdResponse
             {
@@ -61,9 +62,9 @@ namespace OrderFlow.Grpc.Services
         }
 
         public override async Task WatchOrderStatus(
-    WatchOrderStatusRequest request,
-    IServerStreamWriter<OrderStatusUpdate> responseStream,
-    ServerCallContext context)
+            WatchOrderStatusRequest request,
+            IServerStreamWriter<OrderStatusUpdate> responseStream,
+            ServerCallContext context)
         {
             if (!Guid.TryParse(request.OrderId, out var orderId))
                 throw new RpcException(new Status(StatusCode.InvalidArgument, "OrderId inválido."));
@@ -76,12 +77,17 @@ namespace OrderFlow.Grpc.Services
 
             while (!context.CancellationToken.IsCancellationRequested)
             {
-                var order = await _getOrderByIdUseCase.ExecuteAsync(
+                var order = await _getOrderByIdUseCase.ExecuteFreshAsync(
                     orderId,
                     context.CancellationToken);
 
                 if (order is null)
                     throw new RpcException(new Status(StatusCode.NotFound, "Ordem não encontrada."));
+
+                _logger.LogInformation(
+                    "Status consultado via stream gRPC. OrderId {OrderId}, Status atual {Status}",
+                    orderId,
+                    order.Status);
 
                 if (order.Status != lastStatus)
                 {
@@ -100,7 +106,7 @@ namespace OrderFlow.Grpc.Services
                         order.Status);
                 }
 
-                if (order.Status is "Completed" or "Failed")
+                if (order.Status is "Completed" or "Failed" or "Cancelled")
                 {
                     _logger.LogInformation(
                         "Stream encerrado para OrderId {OrderId}. Status final {Status}",

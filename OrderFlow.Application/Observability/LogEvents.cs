@@ -15,5 +15,9 @@
         public const string MessageRetried = "MessageRetried";
         public const string MessageSentToDlq = "MessageSentToDlq";
         public const string KafkaEventPublished = "KafkaEventPublished";
+        public const string OrderCacheHit = "OrderCacheHit";
+        public const string OrderCacheMiss = "OrderCacheMiss";
+        public const string OrderCacheSet = "OrderCacheSet";
+        public const string OrderCacheRemoved = "OrderCacheRemoved";
     }
 }

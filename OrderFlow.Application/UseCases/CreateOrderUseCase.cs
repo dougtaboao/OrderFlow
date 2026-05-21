@@ -3,6 +3,7 @@ using OrderFlow.Application.Dtos;
 using OrderFlow.Application.Interfaces;
 using OrderFlow.Application.Messaging;
 using OrderFlow.Application.Observability;
+using OrderFlow.Application.Security;
 using OrderFlow.Domain.Entities;
 using OrderFlow.Domain.Interfaces;
 using System.ComponentModel.DataAnnotations;
@@ -18,6 +19,7 @@ namespace OrderFlow.Application.UseCases
         private readonly ICorrelationContext _correlationContext;
         private readonly ILogger<CreateOrderUseCase> _logger;
         private readonly ICreateOrderValidator _validator;
+        private readonly ICurrentUser _currentUser;
 
         public CreateOrderUseCase(
             IOrderRepository orderRepository,
@@ -25,24 +27,29 @@ namespace OrderFlow.Application.UseCases
             IUnitOfWork unitOfWork,
             ICorrelationContext correlationContext,
             ILogger<CreateOrderUseCase> logger,
-            ICreateOrderValidator validator)
+            ICreateOrderValidator validator,
+            ICurrentUser currentUser)
         {
             _orderRepository = orderRepository;
             _outboxMessageRepository = outboxMessageRepository;
             _unitOfWork = unitOfWork;
             _correlationContext = correlationContext;
             _logger = logger;
-            _validator = validator;
+            _validator = validator; ;
+            _currentUser = currentUser;
         }
 
         public async Task<CreateOrderResponse> ExecuteAsync(CreateOrderRequest request, CancellationToken cancellationToken = default)
         {
+            if (!_currentUser.IsAuthenticated || _currentUser.UserId == Guid.Empty)
+                throw new UnauthorizedAccessException("Usuário autenticado inválido.");
+
             _validator.Validate(request);
 
             using (_logger.BeginScope(new Dictionary<string, object>
             {
                 [LogProperties.CorrelationId] = _correlationContext.CorrelationId,
-                [LogProperties.UserId] = request.UserId,
+                [LogProperties.UserId] = _currentUser.UserId,
                 [LogProperties.OrderType] = request.Type,
                 [LogProperties.ExternalReference] = request.ExternalReference
             }))
@@ -52,11 +59,11 @@ namespace OrderFlow.Application.UseCases
                 using var activity = Telemetry.ActivitySource.StartActivity("CreateOrder");
 
                 activity?.SetTag("order.type", request.Type.ToString());
-                activity?.SetTag("order.userId", request.UserId);
+                activity?.SetTag("order.userId", _currentUser.UserId);
                 activity?.SetTag("order.externalReference", request.ExternalReference);
 
                 var order = new Order(
-                    request.UserId,
+                    _currentUser.UserId,
                     request.Amount,
                     request.Type,
                     request.Priority,

@@ -1,6 +1,7 @@
 ﻿using OrderFlow.Application.Dtos;
 using OrderFlow.Application.Interfaces;
 using OrderFlow.Domain.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace OrderFlow.Application.Validators
 {
@@ -8,8 +9,10 @@ namespace OrderFlow.Application.Validators
     {
         public void Validate(CreateOrderRequest request)
         {
-            if (request.UserId == Guid.Empty)
-                throw new ArgumentException("UserId inválido.");
+            // UserId não vem mais do body
+            // UserId vem do token JWT validado
+            // if (request.UserId == Guid.Empty)
+            //    throw new ArgumentException("UserId inválido.");
 
             if (request.Amount <= 0)
                 throw new ArgumentException("Amount deve ser maior que zero.");

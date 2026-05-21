@@ -26,6 +26,10 @@ namespace OrderFlow.Api.Middlewares
             {
                 await HandleExceptionAsync(context, ex, HttpStatusCode.BadRequest);
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                await HandleExceptionAsync(context, ex, HttpStatusCode.Unauthorized);
+            }
             catch (InvalidOperationException ex)
             {
                 await HandleExceptionAsync(context, ex, HttpStatusCode.BadRequest);
@@ -35,6 +39,7 @@ namespace OrderFlow.Api.Middlewares
                 _logger.LogError(ex, "Erro inesperado na API.");
                 await HandleExceptionAsync(context, ex, HttpStatusCode.InternalServerError);
             }
+      
         }
 
         private static async Task HandleExceptionAsync(

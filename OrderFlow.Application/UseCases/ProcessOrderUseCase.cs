@@ -16,6 +16,8 @@ namespace OrderFlow.Application.UseCases
         private readonly IOrderEventPublisher _orderEventPublisher;
         private readonly ICorrelationContext _correlationContext;
         private readonly IOrderProcessingStrategyResolver _strategyResolver;
+        private readonly IRiskAnalysisGateway _riskAnalysisGateway;
+        private readonly IOrderCacheService _orderCacheService;
 
         public ProcessOrderUseCase(
             IOrderRepository orderRepository,
@@ -23,7 +25,9 @@ namespace OrderFlow.Application.UseCases
             ILogger<ProcessOrderUseCase> logger,
             IOrderEventPublisher orderEventPublisher,
             ICorrelationContext correlationContext,
-            IOrderProcessingStrategyResolver strategyResolver)
+            IOrderProcessingStrategyResolver strategyResolver,
+            IRiskAnalysisGateway riskAnalysisGateway,
+            IOrderCacheService orderCacheService)
         {
             _orderRepository = orderRepository;
             _unitOfWork = unitOfWork;
@@ -31,6 +35,8 @@ namespace OrderFlow.Application.UseCases
             _orderEventPublisher = orderEventPublisher;
             _correlationContext = correlationContext;
             _strategyResolver = strategyResolver;
+            _riskAnalysisGateway = riskAnalysisGateway;
+            _orderCacheService = orderCacheService;
         }
 
         public async Task ExecuteAsync(Guid orderId, CancellationToken cancellationToken = default)
@@ -38,6 +44,12 @@ namespace OrderFlow.Application.UseCases
             var stopwatch = Stopwatch.StartNew();
 
             var order = await _orderRepository.GetByIdAsync(orderId, cancellationToken);
+
+            if (order is null)
+            {
+                _logger.LogWarning("Ordem {OrderId} não encontrada para processamento", orderId);
+                throw new InvalidOperationException($"Ordem {orderId} não encontrada.");
+            }
 
             using var activity = Telemetry.ActivitySource.StartActivity("ProcessOrder");
 
@@ -75,19 +87,24 @@ namespace OrderFlow.Application.UseCases
                 {
                     _logger.LogInformation("{Event} - Iniciando processamento da ordem", LogEvents.OrderProcessingStarted);
 
-                    if (order.Amount > 1000)
-                    {
-                        _logger.LogWarning(
-                            "Simulando falha para testes de retry/DLQ. OrderId {OrderId}",
-                            order.Id);
+                    //if (order.Amount > 1000)
+                    //{
+                    //    _logger.LogWarning(
+                    //        "Simulando falha para testes de retry/DLQ. OrderId {OrderId}",
+                    //        order.Id);
 
-                        throw new Exception("Falha simulada para retry e DLQ.");
-                    }
+                    //    throw new Exception("Falha simulada para retry e DLQ.");
+                    //}
 
                     order.MarkAsProcessing(order.Amount);
                     await _unitOfWork.SaveChangesAsync(cancellationToken);
+                    await _orderCacheService.RemoveAsync(order.Id, cancellationToken);
 
-                    _logger.LogInformation("Ordem {OrderId} movida para Processing", order.Id);
+
+                    _logger.LogInformation(
+                        "Ordem {OrderId} movida para {Status}",
+                        order.Id,
+                        order.Status);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -116,10 +133,27 @@ namespace OrderFlow.Application.UseCases
 
                 await strategy.ProcessAsync(order, cancellationToken);
 
+                var riskResult = await _riskAnalysisGateway.AnalyzeAsync(order, cancellationToken);
+
+                if (!riskResult.Approved)
+                {
+                    _logger.LogWarning(
+                        "Order {OrderId} rejected by risk analysis. Reason {Reason}",
+                        order.Id,
+                        riskResult.Reason);
+
+                    order.MarkAsFailed(riskResult.Reason);
+                    await _unitOfWork.SaveChangesAsync(cancellationToken);
+                    await _orderCacheService.RemoveAsync(order.Id, cancellationToken);
+
+                    return;
+                }
+
                 try
                 {
                     order.MarkAsCompleted(order.Amount);
                     await _unitOfWork.SaveChangesAsync(cancellationToken);
+                    await _orderCacheService.RemoveAsync(order.Id, cancellationToken);
 
                     var integrationEvent = new OrderCompletedIntegrationEvent
                     {
@@ -131,8 +165,10 @@ namespace OrderFlow.Application.UseCases
                     };
 
                     _logger.LogInformation(
-                        "{Event} - Ordem concluída com sucesso",
-                        LogEvents.OrderCompleted);
+                        "{Event} - Ordem {OrderId} concluída com status {Status}",
+                        LogEvents.OrderCompleted,
+                        order.Id,
+                        order.Status);
 
                     await _orderEventPublisher.PublishOrderCompletedAsync(integrationEvent, cancellationToken);
 
