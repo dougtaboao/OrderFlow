@@ -8,14 +8,14 @@ using OrderFlow.Domain.ReadModels;
 
 namespace OrderFlow.Worker
 {
-    public class KafkaOrderCompletedAuditWorker : BackgroundService
+    public class KafkaOrderStatusChangedAuditWorker : BackgroundService
     {
-        private readonly ILogger<KafkaOrderCompletedAuditWorker> _logger;
+        private readonly ILogger<KafkaOrderStatusChangedAuditWorker> _logger;
         private readonly KafkaSettings _settings;
         private readonly IServiceScopeFactory _scopeFactory;
 
-        public KafkaOrderCompletedAuditWorker(
-            ILogger<KafkaOrderCompletedAuditWorker> logger,
+        public KafkaOrderStatusChangedAuditWorker(
+            ILogger<KafkaOrderStatusChangedAuditWorker> logger,
             KafkaSettings settings,
             IServiceScopeFactory scopeFactory)
         {
@@ -34,7 +34,7 @@ namespace OrderFlow.Worker
             var config = new ConsumerConfig
             {
                 BootstrapServers = _settings.BootstrapServers,
-                GroupId = "orderflow-audit-consumer",
+                GroupId = "orderflow-status-audit-consumer",
                 AutoOffsetReset = AutoOffsetReset.Earliest,
                 EnableAutoCommit = false
             };
@@ -44,7 +44,7 @@ namespace OrderFlow.Worker
             consumer.Subscribe(_settings.OrderStatusChangedTopic);
 
             _logger.LogInformation(
-                "Kafka audit consumer iniciado. Topic {Topic}, GroupId {GroupId}",
+                "Kafka status changed audit consumer iniciado. Topic {Topic}, GroupId {GroupId}",
                 _settings.OrderCompletedTopic,
                 config.GroupId);
 
@@ -84,19 +84,19 @@ namespace OrderFlow.Worker
                         integrationEvent.OrderId,
                         integrationEvent.UserId,
                         integrationEvent.Amount,
-                        "OrderCompleted",
+                        integrationEvent.NewStatus,
                         correlationId,
-                        integrationEvent.CompletedAt);
+                        integrationEvent.OccurredAt);
 
                     await repository.AddAsync(readModel, stoppingToken);
 
                     await unitOfWork.SaveChangesAsync(stoppingToken);
 
                     _logger.LogInformation(
-                        "AUDIT - OrderCompleted consumido. OrderId {OrderId}, UserId {UserId}, Amount {Amount}, CorrelationId {CorrelationId}, Partition {Partition}, Offset {Offset}",
+                        "AUDIT - OrderStatusChanged consumido. OrderId {OrderId}, PreviousStatus {PreviousStatus}, NewStatus {NewStatus}, CorrelationId {CorrelationId}, Partition {Partition}, Offset {Offset}",
                         integrationEvent.OrderId,
-                        integrationEvent.UserId,
-                        integrationEvent.Amount,
+                        integrationEvent.PreviousStatus,
+                        integrationEvent.NewStatus,
                         correlationId,
                         result.Partition.Value,
                         result.Offset.Value);

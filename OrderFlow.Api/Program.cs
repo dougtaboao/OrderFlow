@@ -189,6 +189,9 @@ builder.Services.AddScoped<ICorrelationContext, CorrelationContext>();
 
 builder.Services.AddScoped<ICreateOrderValidator, CreateOrderValidator>();
 
+builder.Services.AddScoped<IGetOrderAuditUseCase, GetOrderAuditUseCase>();
+builder.Services.AddScoped<IOrderAuditReadModelRepository, OrderAuditReadModelRepository>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -37,5 +37,18 @@ namespace OrderFlow.Api.Controllers
 
             return Ok(response);
         }
+
+        [HttpGet("{orderId:guid}/audit")]
+        public async Task<IActionResult> GetAudit(
+            Guid orderId,
+            [FromServices] IGetOrderAuditUseCase useCase,
+            CancellationToken cancellationToken)
+        {
+            var result = await useCase.ExecuteAsync(
+                orderId,
+                cancellationToken);
+
+            return Ok(result);
+        }
     }
 }

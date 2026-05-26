@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using OrderFlow.Application.Interfaces;
 using OrderFlow.Application.Messaging;
 using OrderFlow.Application.Observability;
+using OrderFlow.Domain.Entities;
 using OrderFlow.Domain.Interfaces;
 using System.Diagnostics;
 
@@ -67,12 +68,6 @@ namespace OrderFlow.Application.UseCases
                 [LogProperties.ExternalReference] = order.ExternalReference
             }))
             {
-                if (order is null)
-                {
-                    _logger.LogWarning("Ordem {OrderId} não encontrada para processamento", orderId);
-                    throw new InvalidOperationException($"Ordem {orderId} não encontrada.");
-                }
-
                 if (!order.CanBeProcessed())
                 {
                     _logger.LogWarning(
@@ -85,29 +80,22 @@ namespace OrderFlow.Application.UseCases
 
                 try
                 {
-                    _logger.LogInformation("{Event} - Iniciando processamento da ordem", LogEvents.OrderProcessingStarted);
+                    _logger.LogInformation(
+                        "{Event} - Iniciando processamento da ordem",
+                        LogEvents.OrderProcessingStarted);
 
                     var previousStatus = order.Status.ToString();
+
                     order.MarkAsProcessing(order.Amount);
+
                     await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-                    await _orderEventPublisher.PublishOrderStatusChangedAsync(
-                        new OrderStatusChangedIntegrationEvent
-                        {
-                            OrderId = order.Id,
-                            UserId = order.UserId,
-                            Amount = order.Amount,
-                            PreviousStatus = previousStatus,
-                            NewStatus = order.Status.ToString(),
-                            OccurredAt = DateTime.UtcNow,
-                            CorrelationId = _correlationContext.CorrelationId
-                        },
-                        cancellationToken);
-
                     await _orderCacheService.RemoveAsync(order.Id, cancellationToken);
 
-                    previousStatus = order.Status.ToString();
-
+                    await PublishStatusChangedAsync(
+                        order,
+                        previousStatus,
+                        reason: null,
+                        cancellationToken);
 
                     _logger.LogInformation(
                         "Ordem {OrderId} movida para {Status}",
@@ -117,6 +105,7 @@ namespace OrderFlow.Application.UseCases
                 catch (DbUpdateConcurrencyException)
                 {
                     Metrics.OrdersFailed.Add(1);
+
                     _logger.LogWarning(
                         "Conflito de concorrência ao mover ordem {OrderId} para Processing",
                         order.Id);
@@ -153,25 +142,20 @@ namespace OrderFlow.Application.UseCases
                     var previousStatus = order.Status.ToString();
 
                     order.MarkAsFailed(riskResult.Reason);
-                    await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-                    await _orderEventPublisher.PublishOrderStatusChangedAsync(
-                        new OrderStatusChangedIntegrationEvent
-                        {
-                            OrderId = order.Id,
-                            UserId = order.UserId,
-                            Amount = order.Amount,
-                            PreviousStatus = previousStatus,
-                            NewStatus = order.Status.ToString(),
-                            Reason = riskResult.Reason,
-                            OccurredAt = DateTime.UtcNow,
-                            CorrelationId = _correlationContext.CorrelationId
-                        },
+                    await _unitOfWork.SaveChangesAsync(cancellationToken);
+                    await _orderCacheService.RemoveAsync(order.Id, cancellationToken);
+
+                    await PublishStatusChangedAsync(
+                        order,
+                        previousStatus,
+                        riskResult.Reason,
                         cancellationToken);
 
-                    previousStatus = order.Status.ToString();
+                    stopwatch.Stop();
 
-                    await _orderCacheService.RemoveAsync(order.Id, cancellationToken);
+                    Metrics.OrderProcessingTime.Record(stopwatch.Elapsed.TotalMilliseconds);
+                    Metrics.OrdersFailed.Add(1);
 
                     return;
                 }
@@ -181,24 +165,15 @@ namespace OrderFlow.Application.UseCases
                     var previousStatus = order.Status.ToString();
 
                     order.MarkAsCompleted(order.Amount);
+
                     await _unitOfWork.SaveChangesAsync(cancellationToken);
-
-                    await _orderEventPublisher.PublishOrderStatusChangedAsync(
-                        new OrderStatusChangedIntegrationEvent
-                        {
-                            OrderId = order.Id,
-                            UserId = order.UserId,
-                            Amount = order.Amount,
-                            PreviousStatus = previousStatus,
-                            NewStatus = order.Status.ToString(),
-                            OccurredAt = DateTime.UtcNow,
-                            CorrelationId = _correlationContext.CorrelationId
-                        },
-                        cancellationToken);
-
-                    previousStatus = order.Status.ToString();
-
                     await _orderCacheService.RemoveAsync(order.Id, cancellationToken);
+
+                    await PublishStatusChangedAsync(
+                        order,
+                        previousStatus,
+                        reason: null,
+                        cancellationToken);
 
                     var integrationEvent = new OrderCompletedIntegrationEvent
                     {
@@ -215,7 +190,9 @@ namespace OrderFlow.Application.UseCases
                         order.Id,
                         order.Status);
 
-                    await _orderEventPublisher.PublishOrderCompletedAsync(integrationEvent, cancellationToken);
+                    await _orderEventPublisher.PublishOrderCompletedAsync(
+                        integrationEvent,
+                        cancellationToken);
 
                     _logger.LogInformation(
                         "{Event} - Evento OrderCompleted publicado no Kafka",
@@ -228,6 +205,8 @@ namespace OrderFlow.Application.UseCases
                     _logger.LogWarning(
                         "Conflito de concorrência ao concluir ordem {OrderId}",
                         order.Id);
+
+                    return;
                 }
             }
 
@@ -235,6 +214,27 @@ namespace OrderFlow.Application.UseCases
 
             Metrics.OrderProcessingTime.Record(stopwatch.Elapsed.TotalMilliseconds);
             Metrics.OrdersProcessed.Add(1);
+        }
+
+        private async Task PublishStatusChangedAsync(
+            Order order,
+            string previousStatus,
+            string? reason,
+            CancellationToken cancellationToken)
+        {
+            await _orderEventPublisher.PublishOrderStatusChangedAsync(
+                new OrderStatusChangedIntegrationEvent
+                {
+                    OrderId = order.Id,
+                    UserId = order.UserId,
+                    Amount = order.Amount,
+                    PreviousStatus = previousStatus,
+                    NewStatus = order.Status.ToString(),
+                    Reason = reason,
+                    OccurredAt = DateTime.UtcNow,
+                    CorrelationId = _correlationContext.CorrelationId
+                },
+                cancellationToken);
         }
     }
 }

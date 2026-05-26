@@ -62,9 +62,12 @@ builder.Services.AddSerilog((services, loggerConfiguration) =>
     builder.Services.AddOpenTelemetry()
     .WithMetrics(metrics =>
     {
-        metrics
-            .AddMeter("OrderFlow")
-            .AddConsoleExporter();
+        metrics.AddMeter("OrderFlow");
+
+        if (builder.Configuration.GetValue<bool>("OpenTelemetry:EnableConsoleMetrics"))
+        {
+            metrics.AddConsoleExporter();
+        }
     });
 
     builder.Services.AddSingleton(messagingSettings);
@@ -112,7 +115,7 @@ if (messagingSettings.Provider == MessagingProvider.Sqs)
     builder.Services.AddScoped<IBuyOrderService, BuyOrderService>();
     builder.Services.AddScoped<ISellOrderService, SellOrderService>();
     builder.Services.AddScoped<ITransferOrderService, TransferOrderService>();
-    builder.Services.AddHostedService<KafkaOrderCompletedAuditWorker>();
+    builder.Services.AddHostedService<KafkaOrderStatusChangedAuditWorker>();
 
     builder.Services.AddScoped<IOrderProcessingStrategy, BuyOrderProcessingStrategy>();
     builder.Services.AddScoped<IOrderProcessingStrategy, SellOrderProcessingStrategy>();
