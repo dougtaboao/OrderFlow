@@ -45,7 +45,7 @@ namespace OrderFlow.Worker
 
             _logger.LogInformation(
                 "Kafka status changed audit consumer iniciado. Topic {Topic}, GroupId {GroupId}",
-                _settings.OrderCompletedTopic,
+                _settings.OrderStatusChangedTopic,
                 config.GroupId);
 
             try

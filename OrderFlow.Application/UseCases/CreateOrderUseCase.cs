@@ -79,7 +79,7 @@ namespace OrderFlow.Application.UseCases
                     OrderId = order.Id
                 };
 
-                _logger.LogInformation(
+                _logger.LogDebug(
                     "CorrelationId no CreateOrderUseCase: {CorrelationId}",
                     _correlationContext.CorrelationId);
 

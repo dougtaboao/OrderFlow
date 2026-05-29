@@ -5,7 +5,9 @@ using OrderFlow.Grpc.Protos;
 Console.Write("Informe o OrderId: ");
 var orderId = Console.ReadLine();
 
-using var channel = GrpcChannel.ForAddress("https://localhost:7001");
+// using var channel = GrpcChannel.ForAddress("https://localhost:7001");
+
+using var channel = GrpcChannel.ForAddress("http://localhost:5001");
 
 var client = new OrderQuery.OrderQueryClient(channel);
 

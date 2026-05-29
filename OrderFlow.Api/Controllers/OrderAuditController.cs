@@ -1,12 +1,31 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using OrderFlow.Application.Interfaces;
 
 namespace OrderFlow.Api.Controllers
 {
-    public class OrderAuditController : Controller
+    [Authorize(Policy = "CanViewOrder")]
+    [ApiController]
+    [Route("api/order-audit")]
+    public class OrderAuditController : ControllerBase
     {
-        public IActionResult Index()
+        private readonly IGetOrderAuditUseCase _getOrderAuditUseCase;
+
+        public OrderAuditController(IGetOrderAuditUseCase getOrderAuditUseCase)
         {
-            return View();
+            _getOrderAuditUseCase = getOrderAuditUseCase;
+        }
+
+        [HttpGet("{orderId:guid}")]
+        public async Task<IActionResult> GetByOrderId(
+            Guid orderId,
+            CancellationToken cancellationToken)
+        {
+            var result = await _getOrderAuditUseCase.ExecuteAsync(
+                orderId,
+                cancellationToken);
+
+            return Ok(result);
         }
     }
 }

@@ -22,7 +22,7 @@ namespace OrderFlow.Api.Middlewares
             if (string.IsNullOrWhiteSpace(correlationId))
                 correlationId = Guid.NewGuid().ToString();
 
-            _logger.LogInformation("CorrelationId gerado/capturado: {CorrelationId}", correlationId);
+            _logger.LogDebug("CorrelationId gerado/capturado: {CorrelationId}", correlationId);
 
             correlationContext.Set(correlationId);
 
