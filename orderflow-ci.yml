@@ -1,6 +1,7 @@
 name: OrderFlow CI
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -8,7 +9,6 @@ on:
   pull_request:
     branches:
       - main
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -23,7 +23,7 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Restore dependencies
-        run: dotnet restore OrderFlow.sln
+        run: dotnet restore OrderFlow.slnx
 
       - name: Build solution
-        run: dotnet build OrderFlow.sln --configuration Release --no-restore
+        run: dotnet build OrderFlow.slnx --configuration Release --no-restore
