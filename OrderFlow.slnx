@@ -1,4 +1,8 @@
 <Solution>
+  <Folder Name="/.github/" />
+  <Folder Name="/.github/workflows/">
+    <File Path="orderflow-ci.yml" />
+  </Folder>
   <Project Path="OrderFlow.Api/OrderFlow.Api.csproj" />
   <Project Path="OrderFlow.Application/OrderFlow.Application.csproj" />
   <Project Path="OrderFlow.Domain/OrderFlow.Domain.csproj" />
