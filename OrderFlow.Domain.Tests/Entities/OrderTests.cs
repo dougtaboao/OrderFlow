@@ -216,12 +216,14 @@ namespace OrderFlow.Domain.Tests.Entities
             Assert.Contains(order.Events, x => x.Type == OrderEventType.Processing);
         }
 
-        [Fact]
-        public void Should_Throw_When_Amount_Is_Zero()
+        [Theory]
+        [InlineData(0)]
+        [InlineData(-10)]
+        [InlineData(-100)]
+        public void Should_Throw_When_Amount_Is_Invalid(decimal amount)
         {
             // Arrange
 
-            var amount = 0m;
 
             // Act
             var exception = Assert.Throws<ArgumentException>(() =>
