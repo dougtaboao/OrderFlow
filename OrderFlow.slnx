@@ -1,10 +1,11 @@
 <Solution>
   <Folder Name="/.github/" />
   <Folder Name="/.github/workflows/">
-    <File Path="orderflow-ci.yml" />
+    <File Path=".github/workflows/orderflow-ci.yml" />
   </Folder>
   <Project Path="OrderFlow.Api/OrderFlow.Api.csproj" />
   <Project Path="OrderFlow.Application/OrderFlow.Application.csproj" />
+  <Project Path="OrderFlow.Domain.Tests/OrderFlow.Domain.Tests.csproj" Id="45e9b1e8-9b35-4ef8-a61d-23c6fa94b809" />
   <Project Path="OrderFlow.Domain/OrderFlow.Domain.csproj" />
   <Project Path="OrderFlow.Grpc.Client/OrderFlow.Grpc.Client.csproj" />
   <Project Path="OrderFlow.Grpc/OrderFlow.Grpc.csproj" />
