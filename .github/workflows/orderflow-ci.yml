@@ -30,3 +30,6 @@ jobs:
         
       - name: Run tests
         run: dotnet test OrderFlow.slnx --configuration Release --no-build
+        
+      - name: Run tests with coverage
+        run: dotnet test OrderFlow.slnx --configuration Release --no-build --collect:"XPlat Code Coverage"
