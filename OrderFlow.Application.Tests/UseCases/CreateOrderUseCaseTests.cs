@@ -11,7 +11,7 @@ using OrderFlow.Domain.Enums;
 using OrderFlow.Domain.Interfaces;
 using System.ComponentModel.DataAnnotations;
 
-namespace OrderFlow.Domain.Tests.UseCases
+namespace OrderFlow.Application.Tests.UseCases
 {
     public class CreateOrderUseCaseTests
     {

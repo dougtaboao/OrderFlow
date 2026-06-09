@@ -4,6 +4,7 @@
     <File Path=".github/workflows/orderflow-ci.yml" />
   </Folder>
   <Project Path="OrderFlow.Api/OrderFlow.Api.csproj" />
+  <Project Path="OrderFlow.Application.Tests/OrderFlow.Application.Tests.csproj" Id="9520b5b3-9a6f-4596-be15-7b62afb2dff9" />
   <Project Path="OrderFlow.Application/OrderFlow.Application.csproj" />
   <Project Path="OrderFlow.Domain.Tests/OrderFlow.Domain.Tests.csproj" Id="45e9b1e8-9b35-4ef8-a61d-23c6fa94b809" />
   <Project Path="OrderFlow.Domain/OrderFlow.Domain.csproj" />
