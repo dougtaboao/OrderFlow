@@ -75,6 +75,10 @@ ScaffoldingReadMe.txt
 # StyleCop
 StyleCopReport.xml
 
+
+coverage-report/
+**/TestResults/
+
 # Files built by Visual Studio
 *_i.c
 *_p.c
@@ -184,6 +188,7 @@ DocProject/Help/*.hhk
 DocProject/Help/*.hhp
 DocProject/Help/Html2
 DocProject/Help/html
+
 
 # Click-Once directory
 publish/
