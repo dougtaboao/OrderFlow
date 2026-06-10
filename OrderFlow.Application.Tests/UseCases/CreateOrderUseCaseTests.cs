@@ -10,6 +10,7 @@ using OrderFlow.Domain.Entities;
 using OrderFlow.Domain.Enums;
 using OrderFlow.Domain.Interfaces;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 
 namespace OrderFlow.Application.Tests.UseCases
 {
@@ -79,13 +80,37 @@ namespace OrderFlow.Application.Tests.UseCases
         [Fact]
         public async Task ExecuteAsync_Should_Create_Order_And_Outbox_When_User_Is_Authenticated()
         {
-            var userId = Guid.NewGuid();
-
             // Arrange
+            var userId = Guid.NewGuid();
+            var correlationId = "correlation-test-001";
+
             SetupAuthenticatedUser(userId);
-            SetupCorrelationId();
+            SetupCorrelationId(correlationId);
             SetupUnitOfWorkSuccess();
-                
+
+            Order? capturedOrder = null;
+            OutboxMessage? capturedOutboxMessage = null;
+
+            _orderRepositoryMock
+                .Setup(x => x.AddAsync(
+                    It.IsAny<Order>(),
+                    It.IsAny<CancellationToken>()))
+                .Callback<Order, CancellationToken>((order, _) =>
+                {
+                    capturedOrder = order;
+                })
+                .Returns(Task.CompletedTask);
+
+            _outboxRepositoryMock
+                .Setup(x => x.AddAsync(
+                    It.IsAny<OutboxMessage>(),
+                    It.IsAny<CancellationToken>()))
+                .Callback<OutboxMessage, CancellationToken>((outboxMessage, _) =>
+                {
+                    capturedOutboxMessage = outboxMessage;
+                })
+                .Returns(Task.CompletedTask);
+
             var useCase = CreateUseCase();
             var request = CreateValidRequest();
 
@@ -96,26 +121,42 @@ namespace OrderFlow.Application.Tests.UseCases
             Assert.NotEqual(Guid.Empty, response.OrderId);
             Assert.Equal("Created", response.Status);
 
+            Assert.NotNull(capturedOrder);
+            Assert.Equal(userId, capturedOrder!.UserId);
+            Assert.Equal(request.Amount, capturedOrder.Amount);
+            Assert.Equal(request.Type, capturedOrder.Type);
+            Assert.Equal(request.Priority, capturedOrder.Priority);
+            Assert.Equal(request.ExternalReference, capturedOrder.ExternalReference);
+            Assert.Equal(request.AssetCode, capturedOrder.AssetCode);
+            Assert.Equal(request.Quantity, capturedOrder.Quantity);
+            Assert.Equal(request.UnitPrice, capturedOrder.UnitPrice);
+            Assert.Equal(request.SourceAccount, capturedOrder.SourceAccount);
+            Assert.Equal(request.DestinationAccount, capturedOrder.DestinationAccount);
+
+            Assert.NotNull(capturedOutboxMessage);
+            Assert.Equal(nameof(OrderCreatedMessage), capturedOutboxMessage!.Type);
+            Assert.Equal(correlationId, capturedOutboxMessage.CorrelationId);
+            Assert.False(string.IsNullOrWhiteSpace(capturedOutboxMessage.Payload));
+
+            var payload = JsonSerializer.Deserialize<OrderCreatedMessage>(
+                capturedOutboxMessage.Payload);
+
+            Assert.NotNull(payload);
+            Assert.Equal(capturedOrder.Id, payload!.OrderId);
+
             _validatorMock.Verify(
                 x => x.Validate(request),
                 Times.Once);
 
             _orderRepositoryMock.Verify(
                 x => x.AddAsync(
-                    It.Is<Order>(order =>
-                        order.UserId == userId &&
-                        order.Amount == request.Amount &&
-                        order.Type == request.Type &&
-                        order.Priority == request.Priority &&
-                        order.ExternalReference == request.ExternalReference),
+                    It.IsAny<Order>(),
                     It.IsAny<CancellationToken>()),
                 Times.Once);
 
             _outboxRepositoryMock.Verify(
                 x => x.AddAsync(
-                    It.Is<OutboxMessage>(outbox =>
-                        outbox.Type == nameof(OrderCreatedMessage) &&
-                        outbox.CorrelationId == "correlation-test-001"),
+                    It.IsAny<OutboxMessage>(),
                     It.IsAny<CancellationToken>()),
                 Times.Once);
 
