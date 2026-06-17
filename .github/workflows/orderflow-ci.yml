@@ -63,3 +63,20 @@ jobs:
 
       - name: Run tests with coverage
         run: dotnet test OrderFlow.slnx --configuration Release --no-build --collect:"XPlat Code Coverage"
+  
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build API Docker image
+        run: docker build -t orderflow-api:ci -f src/OrderFlow.Api/Dockerfile .
+
+      - name: Build Worker Docker image
+        run: docker build -t orderflow-worker:ci -f src/OrderFlow.Worker/Dockerfile .
+
+      - name: Build gRPC Docker image
+        run: docker build -t orderflow-grpc:ci -f src/OrderFlow.Grpc/Dockerfile .
