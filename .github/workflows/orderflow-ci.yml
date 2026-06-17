@@ -64,19 +64,35 @@ jobs:
       - name: Run tests with coverage
         run: dotnet test OrderFlow.slnx --configuration Release --no-build --collect:"XPlat Code Coverage"
   
-  docker-build:
+  docker-build-and-push:
     runs-on: ubuntu-latest
     needs: build-and-test
+
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
       - name: Build API Docker image
-        run: docker build -t orderflow-api:ci -f OrderFlow.Api/Dockerfile .
+        run: docker build -t ghcr.io/${{ github.repository_owner }}/orderflow-api:latest -f OrderFlow.Api/Dockerfile .
 
       - name: Build Worker Docker image
-        run: docker build -t orderflow-worker:ci -f OrderFlow.Worker/Dockerfile .
+        run: docker build -t ghcr.io/${{ github.repository_owner }}/orderflow-worker:latest -f OrderFlow.Worker/Dockerfile .
 
       - name: Build gRPC Docker image
-        run: docker build -t orderflow-grpc:ci -f OrderFlow.Grpc/Dockerfile .
+        run: docker build -t ghcr.io/${{ github.repository_owner }}/orderflow-grpc:latest -f OrderFlow.Grpc/Dockerfile .
+
+      - name: Push API Docker image
+        run: docker push ghcr.io/${{ github.repository_owner }}/orderflow-api:latest
+
+      - name: Push Worker Docker image
+        run: docker push ghcr.io/${{ github.repository_owner }}/orderflow-worker:latest
+
+      - name: Push gRPC Docker image
+        run: docker push ghcr.io/${{ github.repository_owner }}/orderflow-grpc:latest
