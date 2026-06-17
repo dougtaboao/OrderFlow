@@ -73,10 +73,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build API Docker image
-        run: docker build -t orderflow-api:ci -f src/OrderFlow.Api/Dockerfile .
+        run: docker build -t orderflow-api:ci -f OrderFlow.Api/Dockerfile .
 
       - name: Build Worker Docker image
-        run: docker build -t orderflow-worker:ci -f src/OrderFlow.Worker/Dockerfile .
+        run: docker build -t orderflow-worker:ci -f OrderFlow.Worker/Dockerfile .
 
       - name: Build gRPC Docker image
-        run: docker build -t orderflow-grpc:ci -f src/OrderFlow.Grpc/Dockerfile .
+        run: docker build -t orderflow-grpc:ci -f OrderFlow.Grpc/Dockerfile .
