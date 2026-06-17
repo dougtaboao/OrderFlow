@@ -47,6 +47,15 @@ namespace OrderFlow.IntegrationTests.Api
             var response = await client.PostAsJsonAsync("/api/orders", request);
 
             // Assert
+
+            var body = await response.Content.ReadAsStringAsync();
+
+            Assert.True(
+                response.StatusCode == HttpStatusCode.Created,
+                $"Expected Created but got {response.StatusCode}. Body: {body}"
+            );
+
+
             Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
             await using var context = _databaseFixture.CreateContext();
@@ -134,7 +143,13 @@ namespace OrderFlow.IntegrationTests.Api
             var response = await client.GetAsync($"/api/orders/{nonExistingOrderId}");
 
             // Assert
-            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+
+            var body = await response.Content.ReadAsStringAsync();
+
+            Assert.True(
+                response.StatusCode == HttpStatusCode.NotFound,
+                $"Expected NotFound but got {response.StatusCode}. Body: {body}"
+            );
         }
 
         [Fact]
@@ -162,7 +177,13 @@ namespace OrderFlow.IntegrationTests.Api
             var response = await client.PostAsJsonAsync("/api/orders", request);
 
             // Assert
-            Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+
+            var body = await response.Content.ReadAsStringAsync();
+
+            Assert.True(
+                response.StatusCode == HttpStatusCode.Unauthorized,
+                $"Expected Unauthorized but got {response.StatusCode}. Body: {body}"
+            );
         }
 
         [Fact]
@@ -193,7 +214,12 @@ namespace OrderFlow.IntegrationTests.Api
             var response = await client.PostAsJsonAsync("/api/orders", request);
 
             // Assert
-            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            var body = await response.Content.ReadAsStringAsync();
+
+            Assert.True(
+                response.StatusCode == HttpStatusCode.BadRequest,
+                $"Expected BadRequest but got {response.StatusCode}. Body: {body}"
+            );
         }
 
         [Fact]
@@ -213,7 +239,6 @@ namespace OrderFlow.IntegrationTests.Api
 
             var body = await response.Content.ReadAsStringAsync();
 
-            // Assert
             // Assert
             Assert.True(
                 response.StatusCode == HttpStatusCode.Unauthorized,

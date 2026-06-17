@@ -1,0 +1,16 @@
+<Solution>
+  <Folder Name="/.github/" />
+  <Folder Name="/.github/workflows/">
+    <File Path=".github/workflows/orderflow-ci.yml" />
+  </Folder>
+  <Project Path="../../../../../../../../Sistemas_Csharp/OrderFlow/OrderFlow.Api/OrderFlow.Api.csproj" />
+  <Project Path="../../../../../../../../Sistemas_Csharp/OrderFlow/OrderFlow.Application.Tests/OrderFlow.Application.Tests.csproj" Id="9520b5b3-9a6f-4596-be15-7b62afb2dff9" />
+  <Project Path="../../../../../../../../Sistemas_Csharp/OrderFlow/OrderFlow.Application/OrderFlow.Application.csproj" />
+  <Project Path="../../../../../../../../Sistemas_Csharp/OrderFlow/OrderFlow.Domain.Tests/OrderFlow.Domain.Tests.csproj" Id="45e9b1e8-9b35-4ef8-a61d-23c6fa94b809" />
+  <Project Path="../../../../../../../../Sistemas_Csharp/OrderFlow/OrderFlow.Domain/OrderFlow.Domain.csproj" />
+  <Project Path="../../../../../../../../Sistemas_Csharp/OrderFlow/OrderFlow.Grpc.Client/OrderFlow.Grpc.Client.csproj" />
+  <Project Path="../../../../../../../../Sistemas_Csharp/OrderFlow/OrderFlow.Grpc/OrderFlow.Grpc.csproj" />
+  <Project Path="../../../../../../../../Sistemas_Csharp/OrderFlow/OrderFlow.Infrastructure/OrderFlow.Infrastructure.csproj" />
+  <Project Path="../../../../../../../../Sistemas_Csharp/OrderFlow/OrderFlow.IntegrationTests/OrderFlow.IntegrationTests.csproj" Id="7b162ed0-193c-4841-bd1c-27453325397a" />
+  <Project Path="../../../../../../../../Sistemas_Csharp/OrderFlow/OrderFlow.Worker/OrderFlow.Worker.csproj" />
+</Solution>
