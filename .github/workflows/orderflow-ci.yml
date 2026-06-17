@@ -2,6 +2,7 @@ name: OrderFlow CI
 
 on:
   workflow_dispatch:
+
   push:
     branches:
       - main
@@ -9,9 +10,25 @@ on:
   pull_request:
     branches:
       - main
+
 jobs:
-  build:
+  build-and-test:
     runs-on: ubuntu-latest
+
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          SA_PASSWORD: "OrderFlow@123"
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'OrderFlow@123' -Q 'SELECT 1' -C"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+          --health-start-period 20s
 
     steps:
       - name: Checkout repository
@@ -27,9 +44,6 @@ jobs:
 
       - name: Build solution
         run: dotnet build OrderFlow.slnx --configuration Release --no-restore
-        
-      - name: Run tests
-        run: dotnet test OrderFlow.slnx --configuration Release --no-build
-        
+
       - name: Run tests with coverage
         run: dotnet test OrderFlow.slnx --configuration Release --no-build --collect:"XPlat Code Coverage"
