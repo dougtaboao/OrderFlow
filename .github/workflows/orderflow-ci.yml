@@ -30,6 +30,21 @@ jobs:
           --health-retries 10
           --health-start-period 20s
 
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+          --health-start-period 10s
+
+    env:
+      Redis__ConnectionString: localhost:6379,abortConnect=false
+      Redis__OrderCacheExpirationMinutes: 5
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
