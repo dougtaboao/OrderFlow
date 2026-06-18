@@ -1,49 +1,49 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using OrderFlow.Infrastructure.Data;
+using Testcontainers.MsSql;
 
 namespace OrderFlow.IntegrationTests.Fixtures
 {
-    public class DatabaseFixture : IAsyncLifetime
+    public sealed class DatabaseFixture : IAsyncLifetime
     {
-        public string ConnectionString =
-            "Server=localhost,1433;Database=OrderFlowIntegrationTestsDb;User Id=sa;Password=OrderFlow@123;TrustServerCertificate=True";
+        private readonly MsSqlContainer _container = new MsSqlBuilder()
+            .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
+            .WithPassword("OrderFlow@123")
+            .Build();
 
-        public DbContextOptions<OrderFlowDbContext> Options { get; private set; } = null!;
+        public string ConnectionString => _container.GetConnectionString();
 
         public async Task InitializeAsync()
         {
-            Options = new DbContextOptionsBuilder<OrderFlowDbContext>()
+            await _container.StartAsync();
+
+            await using var context = CreateContext();
+
+            await context.Database.MigrateAsync();
+        }
+
+        public OrderFlowDbContext CreateContext()
+        {
+            var options = new DbContextOptionsBuilder<OrderFlowDbContext>()
                 .UseSqlServer(ConnectionString)
                 .Options;
 
-            await using var context = new OrderFlowDbContext(Options);
-
-            await context.Database.EnsureDeletedAsync();
-            // await context.Database.EnsureCreatedAsync(); // Recria o banco em status atual
-            await context.Database.MigrateAsync(); // Assim é otimo para homol e prod pq recria as migrações em ordem validando as alterações pro banco atual 
-        }
-
-        public async Task DisposeAsync()
-        {
-            await using var context = new OrderFlowDbContext(Options);
-
-            await context.Database.EnsureDeletedAsync();
+            return new OrderFlowDbContext(options);
         }
 
         public async Task ClearDatabaseAsync()
         {
             await using var context = CreateContext();
 
-            await context.OrderAuditReadModels.ExecuteDeleteAsync();
-            await context.OutboxMessages.ExecuteDeleteAsync();
-            await context.Orders.ExecuteDeleteAsync();
+            context.OrderEvents.RemoveRange(context.OrderEvents);
+            context.Orders.RemoveRange(context.Orders);
 
             await context.SaveChangesAsync();
         }
 
-        public OrderFlowDbContext CreateContext()
+        public async Task DisposeAsync()
         {
-            return new OrderFlowDbContext(Options);
+            await _container.DisposeAsync();
         }
     }
 }

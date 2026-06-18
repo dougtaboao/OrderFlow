@@ -16,7 +16,7 @@ namespace OrderFlow.IntegrationTests.Repositories
             _databaseFixture = databaseFixture;
         }
 
-        //[Fact]
+        [Fact]
         public async Task Should_Save_Order_And_Get_By_Id_Using_SqlServer()
         {
             // Arrange
