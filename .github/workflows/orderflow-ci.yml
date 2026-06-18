@@ -41,10 +41,50 @@ jobs:
           --health-retries 5
           --health-start-period 10s
 
+      rabbitmq:
+        image: rabbitmq:3-management
+        ports:
+          - 5672:5672
+          - 15672:15672
+        options: >-
+          --health-cmd "rabbitmq-diagnostics -q ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+          --health-start-period 20s
+          
+      kafka:
+        image: bitnami/kafka:latest
+        ports:
+          - 9092:9092
+        env:
+          KAFKA_CFG_NODE_ID: 1
+          KAFKA_CFG_PROCESS_ROLES: broker,controller
+          KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+          KAFKA_CFG_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+          KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+          KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+          KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+          KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
+          ALLOW_PLAINTEXT_LISTENER: "yes"
+        options: >-
+          --health-cmd "kafka-topics.sh --bootstrap-server localhost:9092 --list"
+          --health-interval 10s
+          --health-timeout 10s
+          --health-retries 10
+          --health-start-period 30s
+
     env:
       ConnectionStrings__DefaultConnection: "Server=localhost,1433;Database=OrderFlowTestsDb;User Id=sa;Password=OrderFlow@123;TrustServerCertificate=True;"
       Redis__ConnectionString: localhost:6379,abortConnect=false
       Redis__OrderCacheExpirationMinutes: 5
+      RabbitMq__HostName: localhost
+      RabbitMq__QueueName: order-created
+      RabbitMq__DeadLetterQueueName: order-created-dlq
+      RabbitMq__MaxRetryCount: 3
+      Kafka__BootstrapServers: localhost:9092
+      Kafka__OrderCreatedTopic: order-created-test
+      Kafka__ConsumerGroup: orderflow-tests
 
     steps:
       - name: Checkout repository
