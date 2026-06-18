@@ -70,8 +70,8 @@ jobs:
           --health-cmd "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list"
           --health-interval 10s
           --health-timeout 10s
-          --health-retries 10
-          --health-start-period 30s
+          --health-retries 20
+          --health-start-period 60s
 
     env:
       ConnectionStrings__DefaultConnection: "Server=localhost,1433;Database=OrderFlowTestsDb;User Id=sa;Password=OrderFlow@123;TrustServerCertificate=True;"

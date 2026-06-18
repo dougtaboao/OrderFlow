@@ -1,4 +1,5 @@
 ﻿using Confluent.Kafka;
+using Confluent.Kafka.Admin;
 using FluentAssertions;
 
 namespace OrderFlow.IntegrationTests.Messaging
@@ -6,13 +7,14 @@ namespace OrderFlow.IntegrationTests.Messaging
     public class KafkaIntegrationTests
     {
         private const string BootstrapServers = "localhost:9092";
-        private const string TopicName = "order-created-test";
 
         [Fact]
         public async Task Kafka_Should_Produce_And_Consume_Message()
         {
             // Arrange
+            var topicName = $"order-created-test-{Guid.NewGuid():N}";
             var key = Guid.NewGuid().ToString();
+
             var payload = $$"""
             {
                 "orderId": "{{Guid.NewGuid()}}",
@@ -20,15 +22,32 @@ namespace OrderFlow.IntegrationTests.Messaging
             }
             """;
 
+            using var adminClient = new AdminClientBuilder(
+                new AdminClientConfig
+                {
+                    BootstrapServers = BootstrapServers
+                }).Build();
+
+            await adminClient.CreateTopicsAsync(new[]
+            {
+                new TopicSpecification
+                {
+                    Name = topicName,
+                    NumPartitions = 1,
+                    ReplicationFactor = 1
+                }
+            });
+
             var producerConfig = new ProducerConfig
             {
-                BootstrapServers = BootstrapServers
+                BootstrapServers = BootstrapServers,
+                Acks = Acks.All
             };
 
             var consumerConfig = new ConsumerConfig
             {
                 BootstrapServers = BootstrapServers,
-                GroupId = $"orderflow-tests-{Guid.NewGuid()}",
+                GroupId = $"orderflow-tests-{Guid.NewGuid():N}",
                 AutoOffsetReset = AutoOffsetReset.Earliest,
                 EnableAutoCommit = false
             };
@@ -37,11 +56,24 @@ namespace OrderFlow.IntegrationTests.Messaging
 
             using var consumer = new ConsumerBuilder<string, string>(consumerConfig).Build();
 
-            consumer.Subscribe(TopicName);
+            consumer.Subscribe(topicName);
+
+            // força o consumer a entrar no grupo antes da publicação
+            var warmupUntil = DateTime.UtcNow.AddSeconds(10);
+
+            while (DateTime.UtcNow < warmupUntil)
+            {
+                consumer.Consume(TimeSpan.FromMilliseconds(200));
+
+                var assignment = consumer.Assignment;
+
+                if (assignment.Count > 0)
+                    break;
+            }
 
             // Act
             var deliveryResult = await producer.ProduceAsync(
-                TopicName,
+                topicName,
                 new Message<string, string>
                 {
                     Key = key,
@@ -52,12 +84,12 @@ namespace OrderFlow.IntegrationTests.Messaging
 
             // Assert producer
             deliveryResult.Status.Should().Be(PersistenceStatus.Persisted);
-            deliveryResult.Topic.Should().Be(TopicName);
+            deliveryResult.Topic.Should().Be(topicName);
 
             // Assert consumer
             ConsumeResult<string, string>? consumed = null;
 
-            var timeout = DateTime.UtcNow.AddSeconds(20);
+            var timeout = DateTime.UtcNow.AddSeconds(30);
 
             while (DateTime.UtcNow < timeout)
             {
