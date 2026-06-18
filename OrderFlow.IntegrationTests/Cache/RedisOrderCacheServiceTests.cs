@@ -3,22 +3,30 @@ using Microsoft.Extensions.Logging.Abstractions;
 using OrderFlow.Application.Dtos;
 using OrderFlow.Infrastructure.Cache;
 using StackExchange.Redis;
+using Testcontainers.Redis;
 
 namespace OrderFlow.IntegrationTests.Cache
 {
     public class RedisOrderCacheServiceTests : IAsyncLifetime
     {
+        private readonly RedisContainer _redisContainer = new RedisBuilder()
+            .WithImage("redis:7")
+            .Build();
+
         private IConnectionMultiplexer _connection = null!;
         private RedisOrderCacheService _cacheService = null!;
 
         public async Task InitializeAsync()
         {
-            _connection = await ConnectionMultiplexer.ConnectAsync(
-                "localhost:6379,abortConnect=false");
+            await _redisContainer.StartAsync();
+
+            var connectionString = _redisContainer.GetConnectionString();
+
+            _connection = await ConnectionMultiplexer.ConnectAsync(connectionString);
 
             var settings = new RedisSettings
             {
-                ConnectionString = "localhost:6379,abortConnect=false",
+                ConnectionString = connectionString,
                 OrderCacheExpirationMinutes = 5
             };
 
@@ -30,25 +38,21 @@ namespace OrderFlow.IntegrationTests.Cache
 
         public async Task DisposeAsync()
         {
-            var database = _connection.GetDatabase();
-            await database.ExecuteAsync("FLUSHDB");
-
             await _connection.CloseAsync();
             _connection.Dispose();
+
+            await _redisContainer.DisposeAsync();
         }
 
         [Fact]
         public async Task SetAsync_Should_Save_Order_In_Redis()
         {
-            // Arrange
             var order = CreateOrderResponse();
 
-            // Act
             await _cacheService.SetAsync(order);
 
             var result = await _cacheService.GetAsync(order.OrderId);
 
-            // Assert
             result.Should().NotBeNull();
             result!.OrderId.Should().Be(order.OrderId);
         }
@@ -56,30 +60,21 @@ namespace OrderFlow.IntegrationTests.Cache
         [Fact]
         public async Task GetAsync_Should_Return_Null_When_Order_Is_Not_In_Cache()
         {
-            // Arrange
-            var orderId = Guid.NewGuid();
+            var result = await _cacheService.GetAsync(Guid.NewGuid());
 
-            // Act
-            var result = await _cacheService.GetAsync(orderId);
-
-            // Assert
             result.Should().BeNull();
         }
 
         [Fact]
         public async Task RemoveAsync_Should_Delete_Order_From_Redis()
         {
-            // Arrange
             var order = CreateOrderResponse();
 
             await _cacheService.SetAsync(order);
-
-            // Act
             await _cacheService.RemoveAsync(order.OrderId);
 
             var result = await _cacheService.GetAsync(order.OrderId);
 
-            // Assert
             result.Should().BeNull();
         }
 
