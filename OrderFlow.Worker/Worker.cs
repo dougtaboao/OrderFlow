@@ -38,7 +38,10 @@ namespace OrderFlow.Worker
 
             var factory = new ConnectionFactory
             {
-                HostName = _settings.HostName
+                HostName = _settings.HostName,
+                Port = _settings.Port,
+                UserName = _settings.UserName,
+                Password = _settings.Password
             };
 
             _connection = await factory.CreateConnectionAsync(cancellationToken);

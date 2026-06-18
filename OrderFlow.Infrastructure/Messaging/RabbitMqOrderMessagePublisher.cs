@@ -19,7 +19,10 @@ namespace OrderFlow.Infrastructure.Messaging
         {
             var factory = new ConnectionFactory
             {
-                HostName = _settings.HostName
+                HostName = _settings.HostName,
+                Port = _settings.Port,
+                UserName = _settings.UserName,
+                Password = _settings.Password
             };
 
             await using var connection = await factory.CreateConnectionAsync(cancellationToken);

@@ -1,26 +1,38 @@
-﻿using System.Text;
-using System.Text.Json;
-using FluentAssertions;
+﻿using FluentAssertions;
 using OrderFlow.Application.Messaging;
 using OrderFlow.Infrastructure.Messaging;
+using OrderFlow.IntegrationTests.Fakes;
+using OrderFlow.IntegrationTests.Fixtures;
 using RabbitMQ.Client;
+using System.Text;
+using System.Text.Json;
 
 namespace OrderFlow.IntegrationTests.Messaging
 {
-    public class RabbitMqOrderMessagePublisherTests : IAsyncLifetime
+    public class RabbitMqOrderMessagePublisherTests : IClassFixture<RabbitMqFixture>, IAsyncLifetime
     {
         private const string QueueName = "order-created-test";
         private const string DeadLetterQueueName = "order-created-dlq-test";
+
+        private readonly RabbitMqFixture _fixture;
 
         private IConnection _connection = null!;
         private IChannel _channel = null!;
         private RabbitMqOrderMessagePublisher _publisher = null!;
 
+        public RabbitMqOrderMessagePublisherTests(RabbitMqFixture fixture)
+        {
+            _fixture = fixture;
+        }
+
         public async Task InitializeAsync()
         {
             var factory = new ConnectionFactory
             {
-                HostName = "localhost"
+                HostName = _fixture.Container.Hostname,
+                Port = _fixture.Container.GetMappedPublicPort(5672),
+                UserName = RabbitMqFixture.UserName,
+                Password = RabbitMqFixture.Password
             };
 
             _connection = await factory.CreateConnectionAsync();
@@ -45,7 +57,10 @@ namespace OrderFlow.IntegrationTests.Messaging
 
             var settings = new RabbitMqSettings
             {
-                HostName = "localhost",
+                HostName = _fixture.Container.Hostname,
+                Port = _fixture.Container.GetMappedPublicPort(5672),
+                UserName = RabbitMqFixture.UserName,
+                Password = RabbitMqFixture.Password,
                 QueueName = QueueName,
                 DeadLetterQueueName = DeadLetterQueueName,
                 MaxRetryCount = 3
@@ -69,16 +84,13 @@ namespace OrderFlow.IntegrationTests.Messaging
         [Fact]
         public async Task PublishAsync_Should_Publish_OrderCreatedMessage_To_RabbitMq()
         {
-            // Arrange
             var message = new OrderCreatedMessage
             {
                 OrderId = Guid.NewGuid()
             };
 
-            // Act
             await _publisher.PublishAsync(message);
 
-            // Assert
             var result = await _channel.BasicGetAsync(
                 queue: QueueName,
                 autoAck: true);
@@ -96,16 +108,13 @@ namespace OrderFlow.IntegrationTests.Messaging
         [Fact]
         public async Task PublishAsync_Should_Create_Message_With_Retry_Count_Header()
         {
-            // Arrange
             var message = new OrderCreatedMessage
             {
                 OrderId = Guid.NewGuid()
             };
 
-            // Act
             await _publisher.PublishAsync(message);
 
-            // Assert
             var result = await _channel.BasicGetAsync(
                 queue: QueueName,
                 autoAck: true);

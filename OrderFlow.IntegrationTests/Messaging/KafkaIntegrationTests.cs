@@ -1,16 +1,24 @@
 ﻿using Confluent.Kafka;
 using Confluent.Kafka.Admin;
 using FluentAssertions;
+using OrderFlow.IntegrationTests.Fixtures;
 
 namespace OrderFlow.IntegrationTests.Messaging
 {
-    public class KafkaIntegrationTests
+    public class KafkaIntegrationTests : IClassFixture<KafkaFixture>
     {
-        private const string BootstrapServers = "localhost:9092";
+        private readonly KafkaFixture _fixture;
+
+        public KafkaIntegrationTests(KafkaFixture fixture)
+        {
+            _fixture = fixture;
+        }
 
         [Fact]
         public async Task Kafka_Should_Produce_And_Consume_Message()
         {
+            var bootstrapServers = _fixture.Container.GetBootstrapAddress();
+
             var topicName = $"order-created-test-{Guid.NewGuid():N}";
             var key = Guid.NewGuid().ToString();
 
@@ -23,7 +31,7 @@ namespace OrderFlow.IntegrationTests.Messaging
 
             using var adminClient = new AdminClientBuilder(new AdminClientConfig
             {
-                BootstrapServers = BootstrapServers
+                BootstrapServers = bootstrapServers
             }).Build();
 
             await adminClient.CreateTopicsAsync(new[]
@@ -40,7 +48,7 @@ namespace OrderFlow.IntegrationTests.Messaging
 
             var producerConfig = new ProducerConfig
             {
-                BootstrapServers = BootstrapServers,
+                BootstrapServers = bootstrapServers,
                 Acks = Acks.All
             };
 
@@ -61,7 +69,7 @@ namespace OrderFlow.IntegrationTests.Messaging
 
             var consumerConfig = new ConsumerConfig
             {
-                BootstrapServers = BootstrapServers,
+                BootstrapServers = bootstrapServers,
                 GroupId = $"orderflow-tests-{Guid.NewGuid():N}",
                 AutoOffsetReset = AutoOffsetReset.Earliest,
                 EnableAutoCommit = false
