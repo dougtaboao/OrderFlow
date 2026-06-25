@@ -106,6 +106,7 @@ jobs:
   docker-build-and-push:
     runs-on: ubuntu-latest
     needs: build-and-test
+    if: github.event_name != 'pull_request'
 
     permissions:
       contents: read
@@ -115,23 +116,41 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set lowercase owner
+        run: echo "IMAGE_OWNER=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
+
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Build API Docker image
-        run: docker build -t ghcr.io/${{ github.repository_owner }}/orderflow-api:latest -f OrderFlow.Api/Dockerfile .
+      - name: Build and push API Docker image
+        run: |
+          docker build \
+            -f OrderFlow.Api/Dockerfile \
+            -t ghcr.io/${IMAGE_OWNER}/orderflow-api:latest \
+            -t ghcr.io/${IMAGE_OWNER}/orderflow-api:${{ github.sha }} \
+            .
 
-      - name: Build Worker Docker image
-        run: docker build -t ghcr.io/${{ github.repository_owner }}/orderflow-worker:latest -f OrderFlow.Worker/Dockerfile .
+          docker push ghcr.io/${IMAGE_OWNER}/orderflow-api:latest
+          docker push ghcr.io/${IMAGE_OWNER}/orderflow-api:${{ github.sha }}
 
-      - name: Build gRPC Docker image
-        run: docker build -t ghcr.io/${{ github.repository_owner }}/orderflow-grpc:latest -f OrderFlow.Grpc/Dockerfile .
+      - name: Build and push Worker Docker image
+        run: |
+          docker build \
+            -f OrderFlow.Worker/Dockerfile \
+            -t ghcr.io/${IMAGE_OWNER}/orderflow-worker:latest \
+            -t ghcr.io/${IMAGE_OWNER}/orderflow-worker:${{ github.sha }} \
+            .
 
-      - name: Push API Docker image
-        run: docker push ghcr.io/${{ github.repository_owner }}/orderflow-api:latest
+          docker push ghcr.io/${IMAGE_OWNER}/orderflow-worker:latest
+          docker push ghcr.io/${IMAGE_OWNER}/orderflow-worker:${{ github.sha }}
 
-      - name: Push Worker Docker image
-        run: docker push ghcr.io/${{ github.repository_owner }}/orderflow-worker:latest
+      - name: Build and push gRPC Docker image
+        run: |
+          docker build \
+            -f OrderFlow.Grpc/Dockerfile \
+            -t ghcr.io/${IMAGE_OWNER}/orderflow-grpc:latest \
+            -t ghcr.io/${IMAGE_OWNER}/orderflow-grpc:${{ github.sha }} \
+            .
 
-      - name: Push gRPC Docker image
-        run: docker push ghcr.io/${{ github.repository_owner }}/orderflow-grpc:latest
+          docker push ghcr.io/${IMAGE_OWNER}/orderflow-grpc:latest
+          docker push ghcr.io/${IMAGE_OWNER}/orderflow-grpc:${{ github.sha }}

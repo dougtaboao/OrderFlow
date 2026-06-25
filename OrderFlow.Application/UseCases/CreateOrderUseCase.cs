@@ -8,6 +8,7 @@ using OrderFlow.Domain.Entities;
 using OrderFlow.Domain.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
+using System.Diagnostics;
 
 namespace OrderFlow.Application.UseCases
 {
@@ -61,8 +62,16 @@ namespace OrderFlow.Application.UseCases
                 activity?.SetTag("order.type", request.Type.ToString());
                 activity?.SetTag("order.userId", _currentUser.UserId);
                 activity?.SetTag("order.externalReference", request.ExternalReference);
+                activity?.SetTag("order.amount", request.Amount);
+                activity?.SetTag("order.priority", request.Priority.ToString());
+                activity?.SetTag("order.assetCode", request.AssetCode);
+                activity?.SetTag("order.quantity", request.Quantity);
+                activity?.SetTag("order.unitPrice", request.UnitPrice);
+                activity?.SetTag("correlation.id", _correlationContext.CorrelationId);
 
-                var order = new Order(
+                try
+                {
+                    var order = new Order(
                     _currentUser.UserId,
                     request.Amount,
                     request.Type,
@@ -74,47 +83,68 @@ namespace OrderFlow.Application.UseCases
                     request.SourceAccount,
                     request.DestinationAccount);
 
-                var integrationMessage = new OrderCreatedMessage
-                {
-                    OrderId = order.Id
-                };
+                    var integrationMessage = new OrderCreatedMessage
+                    {
+                        OrderId = order.Id
+                    };
 
-                _logger.LogDebug(
-                    "CorrelationId no CreateOrderUseCase: {CorrelationId}",
-                    _correlationContext.CorrelationId);
+                    _logger.LogDebug(
+                        "CorrelationId no CreateOrderUseCase: {CorrelationId}",
+                        _correlationContext.CorrelationId);
 
-                var outboxMessage = new OutboxMessage(
-                    type: nameof(OrderCreatedMessage),
-                    payload: JsonSerializer.Serialize(integrationMessage), 
-                    correlationId : _correlationContext.CorrelationId);
+                    var outboxMessage = new OutboxMessage(
+                        type: nameof(OrderCreatedMessage),
+                        payload: JsonSerializer.Serialize(integrationMessage),
+                        correlationId: _correlationContext.CorrelationId);
 
-                await _orderRepository.AddAsync(order, cancellationToken);
-                await _outboxMessageRepository.AddAsync(outboxMessage, cancellationToken);
+                    await _orderRepository.AddAsync(order, cancellationToken);
+                    await _outboxMessageRepository.AddAsync(outboxMessage, cancellationToken);
 
-                try
-                {
-                    await _unitOfWork.SaveChangesAsync(cancellationToken);
+                    try
+                    {
+                        await _unitOfWork.SaveChangesAsync(cancellationToken);
+                    }
+                    catch (Exception ex)
+                    {
+                        var message = ex.InnerException?.Message ?? ex.Message;
+                        throw new Exception($"Erro ao salvar Order + Outbox: {message}", ex);
+                    }
+
+                    Metrics.OrdersCreated.Add(1);
+
+                    _logger.LogInformation(
+                        "{Event} - Ordem {OrderId} criada e outbox {OutboxMessageId} registrada",
+                        LogEvents.OrderCreated,
+                        order.Id,
+                        outboxMessage.Id);
+
+                    activity?.SetTag("order.id", order.Id);
+                    activity?.SetTag("outbox.id", outboxMessage.Id);
+                    activity?.SetStatus(ActivityStatusCode.Ok);
+
+                    return new CreateOrderResponse
+                    {
+                        OrderId = order.Id,
+                        Status = order.Status.ToString(),
+                        CreatedAt = order.CreatedAt
+                    };
                 }
                 catch (Exception ex)
                 {
-                    var message = ex.InnerException?.Message ?? ex.Message;
-                    throw new Exception($"Erro ao salvar Order + Outbox: {message}", ex);
+                    Metrics.OrdersFailed.Add(1);
+
+                    activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                    activity?.AddException(ex);
+
+                    _logger.LogError(
+                        ex,
+                        "{Event} - Erro ao criar ordem",
+                        LogEvents.OrderCreationFailed);
+
+                    throw;
                 }
 
-                Metrics.OrdersCreated.Add(1);
 
-                _logger.LogInformation(
-                    "{Event} - Ordem {OrderId} criada e outbox {OutboxMessageId} registrada",
-                    LogEvents.OrderCreated,
-                    order.Id,
-                    outboxMessage.Id);
-
-                return new CreateOrderResponse
-                {
-                    OrderId = order.Id,
-                    Status = order.Status.ToString(),
-                    CreatedAt = order.CreatedAt
-                };
             }
         }
     }

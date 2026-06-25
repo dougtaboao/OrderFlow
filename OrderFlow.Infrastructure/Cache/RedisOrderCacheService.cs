@@ -2,7 +2,9 @@
 using OrderFlow.Application.Dtos;
 using OrderFlow.Application.Interfaces;
 using OrderFlow.Application.Observability;
+using OrderFlow.Domain.Entities;
 using StackExchange.Redis;
+using System.Diagnostics;
 using System.Text.Json;
 
 namespace OrderFlow.Infrastructure.Cache
@@ -30,6 +32,11 @@ namespace OrderFlow.Infrastructure.Cache
             var database = _connection.GetDatabase();
 
             var key = GetKey(orderId);
+
+            using var activity = Telemetry.ActivitySource.StartActivity("Redis.GetOrder");
+            activity?.SetTag("order.id", orderId);
+            activity?.SetTag("cache.key", key);
+
             var value = await database.StringGetAsync(key);
 
             if (value.IsNullOrEmpty)
@@ -60,8 +67,14 @@ namespace OrderFlow.Infrastructure.Cache
         {
             var database = _connection.GetDatabase();
 
-            var key = GetKey(order.OrderId);
             var json = JsonSerializer.Serialize(order);
+
+            var key = GetKey(order.OrderId);
+
+            using var activity = Telemetry.ActivitySource.StartActivity("Redis.SetOrder");
+            activity?.SetTag("order.id", order.OrderId);
+            activity?.SetTag("cache.key", key);
+            activity?.SetTag("cache.ttl.minutes", _settings.OrderCacheExpirationMinutes);
 
             await database.StringSetAsync(
                 key,
@@ -84,6 +97,10 @@ namespace OrderFlow.Infrastructure.Cache
             var database = _connection.GetDatabase();
 
             var key = GetKey(orderId);
+
+            using var activity = Telemetry.ActivitySource.StartActivity("Redis.RemoveOrder");
+            activity?.SetTag("order.id", orderId);
+            activity?.SetTag("cache.key", key);
 
             await database.KeyDeleteAsync(key);
 

@@ -3,7 +3,8 @@
     public static class LogEvents
     {
         public const string OrderCreationStarted = "OrderCreationStarted";
-        public const string OrderCreated = "OrderCreated";
+        public const string OrderCreationFailed = "OrderCreationFailed";
+        public const string OrderCreated = "OrderCreated";        
         public const string OutboxMessageCreated = "OutboxMessageCreated";
         public const string OutboxPublishingStarted = "OutboxPublishingStarted";
         public const string OutboxMessagePublished = "OutboxMessagePublished";

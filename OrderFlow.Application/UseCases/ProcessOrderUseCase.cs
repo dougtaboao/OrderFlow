@@ -44,176 +44,225 @@ namespace OrderFlow.Application.UseCases
         {
             var stopwatch = Stopwatch.StartNew();
 
-            var order = await _orderRepository.GetByIdAsync(orderId, cancellationToken);
-
-            if (order is null)
-            {
-                _logger.LogWarning("Ordem {OrderId} não encontrada para processamento", orderId);
-                throw new InvalidOperationException($"Ordem {orderId} não encontrada.");
-            }
-
             using var activity = Telemetry.ActivitySource.StartActivity("ProcessOrder");
 
-            activity?.SetTag("order.id", order.Id);
-            activity?.SetTag("order.type", order.Type.ToString());
-            activity?.SetTag("order.amount", order.Amount);
+            activity?.SetTag("order.id", orderId);
+            activity?.SetTag("correlation.id", _correlationContext.CorrelationId);
 
-            using (_logger.BeginScope(new Dictionary<string, object>
+            try
             {
-                [LogProperties.CorrelationId] = _correlationContext.CorrelationId,
-                [LogProperties.OrderId] = order.Id,
-                [LogProperties.UserId] = order.UserId,
-                [LogProperties.OrderType] = order.Type,
-                [LogProperties.Status] = order.Status,
-                [LogProperties.ExternalReference] = order.ExternalReference
-            }))
-            {
-                if (!order.CanBeProcessed())
+                var order = await _orderRepository.GetByIdAsync(orderId, cancellationToken);
+
+                if (order is null)
                 {
-                    _logger.LogWarning(
-                        "{Event} - Ordem ignorada por idempotência. Status atual {Status}",
-                        LogEvents.OrderProcessingIgnored,
-                        order.Status);
-
-                    return;
-                }
-
-                try
-                {
-                    _logger.LogInformation(
-                        "{Event} - Iniciando processamento da ordem",
-                        LogEvents.OrderProcessingStarted);
-
-                    var previousStatus = order.Status.ToString();
-
-                    order.MarkAsProcessing(order.Amount);
-
-                    await _unitOfWork.SaveChangesAsync(cancellationToken);
-                    await _orderCacheService.RemoveAsync(order.Id, cancellationToken);
-
-                    await PublishStatusChangedAsync(
-                        order,
-                        previousStatus,
-                        reason: null,
-                        cancellationToken);
-
-                    _logger.LogInformation(
-                        "Ordem {OrderId} movida para {Status}",
-                        order.Id,
-                        order.Status);
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    Metrics.OrdersFailed.Add(1);
+                    activity?.SetStatus(ActivityStatusCode.Error, "Order not found");
 
                     _logger.LogWarning(
-                        "Conflito de concorrência ao mover ordem {OrderId} para Processing",
-                        order.Id);
+                        "Ordem {OrderId} não encontrada para processamento",
+                        orderId);
 
-                    return;
-                }
-                catch (InvalidOperationException ex)
-                {
-                    Metrics.OrdersFailed.Add(1);
-
-                    _logger.LogWarning(
-                        ex,
-                        "Transição inválida ao mover ordem {OrderId} para Processing",
-                        order.Id);
-
-                    return;
+                    throw new InvalidOperationException($"Ordem {orderId} não encontrada.");
                 }
 
-                await Task.Delay(2000, cancellationToken);
+                activity?.SetTag("order.userId", order.UserId);
+                activity?.SetTag("order.type", order.Type.ToString());
+                activity?.SetTag("order.amount", order.Amount);
+                activity?.SetTag("order.status", order.Status.ToString());
 
-                var strategy = _strategyResolver.Resolve(order.Type);
-
-                await strategy.ProcessAsync(order, cancellationToken);
-
-                var riskResult = await _riskAnalysisGateway.AnalyzeAsync(order, cancellationToken);
-
-                if (!riskResult.Approved)
+                using (_logger.BeginScope(new Dictionary<string, object>
                 {
-                    _logger.LogWarning(
-                        "Order {OrderId} rejected by risk analysis. Reason {Reason}",
-                        order.Id,
-                        riskResult.Reason);
-
-                    var previousStatus = order.Status.ToString();
-
-                    order.MarkAsFailed(riskResult.Reason);
-
-                    await _unitOfWork.SaveChangesAsync(cancellationToken);
-                    await _orderCacheService.RemoveAsync(order.Id, cancellationToken);
-
-                    await PublishStatusChangedAsync(
-                        order,
-                        previousStatus,
-                        riskResult.Reason,
-                        cancellationToken);
-
-                    stopwatch.Stop();
-
-                    Metrics.OrderProcessingTime.Record(stopwatch.Elapsed.TotalMilliseconds);
-                    Metrics.OrdersFailed.Add(1);
-
-                    return;
-                }
-
-                try
+                    [LogProperties.CorrelationId] = _correlationContext.CorrelationId,
+                    [LogProperties.OrderId] = order.Id,
+                    [LogProperties.UserId] = order.UserId,
+                    [LogProperties.OrderType] = order.Type,
+                    [LogProperties.Status] = order.Status,
+                    [LogProperties.ExternalReference] = order.ExternalReference
+                }))
                 {
-                    var previousStatus = order.Status.ToString();
-
-                    order.MarkAsCompleted(order.Amount);
-
-                    await _unitOfWork.SaveChangesAsync(cancellationToken);
-                    await _orderCacheService.RemoveAsync(order.Id, cancellationToken);
-
-                    await PublishStatusChangedAsync(
-                        order,
-                        previousStatus,
-                        reason: null,
-                        cancellationToken);
-
-                    var integrationEvent = new OrderCompletedIntegrationEvent
+                    if (!order.CanBeProcessed())
                     {
-                        OrderId = order.Id,
-                        UserId = order.UserId,
-                        Amount = order.Amount,
-                        CompletedAt = DateTime.UtcNow,
-                        CorrelationId = _correlationContext.CorrelationId
-                    };
+                        activity?.SetTag("processing.ignored", true);
+                        activity?.SetTag("processing.ignore.reason", "Order cannot be processed");
+                        activity?.SetStatus(ActivityStatusCode.Ok);
 
-                    _logger.LogInformation(
-                        "{Event} - Ordem {OrderId} concluída com status {Status}",
-                        LogEvents.OrderCompleted,
-                        order.Id,
-                        order.Status);
+                        _logger.LogWarning(
+                            "{Event} - Ordem ignorada por idempotência. Status atual {Status}",
+                            LogEvents.OrderProcessingIgnored,
+                            order.Status);
 
-                    await _orderEventPublisher.PublishOrderCompletedAsync(
-                        integrationEvent,
-                        cancellationToken);
+                        return;
+                    }
 
-                    _logger.LogInformation(
-                        "{Event} - Evento OrderCompleted publicado no Kafka",
-                        LogEvents.KafkaEventPublished);
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    Metrics.OrdersFailed.Add(1);
+                    try
+                    {
+                        _logger.LogInformation(
+                            "{Event} - Iniciando processamento da ordem",
+                            LogEvents.OrderProcessingStarted);
 
-                    _logger.LogWarning(
-                        "Conflito de concorrência ao concluir ordem {OrderId}",
-                        order.Id);
+                        var previousStatus = order.Status.ToString();
 
-                    return;
+                        order.MarkAsProcessing(order.Amount);
+
+                        await _unitOfWork.SaveChangesAsync(cancellationToken);
+                        await _orderCacheService.RemoveAsync(order.Id, cancellationToken);
+
+                        await PublishStatusChangedAsync(
+                            order,
+                            previousStatus,
+                            reason: null,
+                            cancellationToken);
+
+                        activity?.SetTag("order.status.after.processing", order.Status.ToString());
+
+                        _logger.LogInformation(
+                            "Ordem {OrderId} movida para {Status}",
+                            order.Id,
+                            order.Status);
+                    }
+                    catch (DbUpdateConcurrencyException ex)
+                    {
+                        Metrics.OrdersFailed.Add(1);
+
+                        activity?.SetStatus(
+                            ActivityStatusCode.Error,
+                            "Concurrency conflict while moving order to Processing");
+
+                        activity?.AddException(ex);
+
+                        _logger.LogWarning(
+                            ex,
+                            "Conflito de concorrência ao mover ordem {OrderId} para Processing",
+                            order.Id);
+
+                        return;
+                    }
+                    catch (InvalidOperationException ex)
+                    {
+                        Metrics.OrdersFailed.Add(1);
+
+                        activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                        activity?.AddException(ex);
+
+                        _logger.LogWarning(
+                            ex,
+                            "Transição inválida ao mover ordem {OrderId} para Processing",
+                            order.Id);
+
+                        return;
+                    }
+
+                    await Task.Delay(2000, cancellationToken);
+
+                    var strategy = _strategyResolver.Resolve(order.Type);
+
+                    activity?.SetTag("processing.strategy", strategy.GetType().Name);
+
+                    await strategy.ProcessAsync(order, cancellationToken);
+
+                    var riskResult = await _riskAnalysisGateway.AnalyzeAsync(order, cancellationToken);
+
+                    activity?.SetTag("risk.approved", riskResult.Approved);
+
+                    if (!riskResult.Approved)
+                    {
+                        activity?.SetTag("risk.reason", riskResult.Reason);
+                        activity?.SetStatus(ActivityStatusCode.Error, riskResult.Reason);
+
+                        _logger.LogWarning(
+                            "Order {OrderId} rejected by risk analysis. Reason {Reason}",
+                            order.Id,
+                            riskResult.Reason);
+
+                        var previousStatus = order.Status.ToString();
+
+                        order.MarkAsFailed(riskResult.Reason);
+
+                        await _unitOfWork.SaveChangesAsync(cancellationToken);
+                        await _orderCacheService.RemoveAsync(order.Id, cancellationToken);
+
+                        await PublishStatusChangedAsync(
+                            order,
+                            previousStatus,
+                            riskResult.Reason,
+                            cancellationToken);
+
+                        Metrics.OrdersFailed.Add(1);
+
+                        return;
+                    }
+
+                    try
+                    {
+                        var previousStatus = order.Status.ToString();
+
+                        order.MarkAsCompleted(order.Amount);
+
+                        await _unitOfWork.SaveChangesAsync(cancellationToken);
+                        await _orderCacheService.RemoveAsync(order.Id, cancellationToken);
+
+                        await PublishStatusChangedAsync(
+                            order,
+                            previousStatus,
+                            reason: null,
+                            cancellationToken);
+
+                        var integrationEvent = new OrderCompletedIntegrationEvent
+                        {
+                            OrderId = order.Id,
+                            UserId = order.UserId,
+                            Amount = order.Amount,
+                            CompletedAt = DateTime.UtcNow,
+                            CorrelationId = _correlationContext.CorrelationId
+                        };
+
+                        _logger.LogInformation(
+                            "{Event} - Ordem {OrderId} concluída com status {Status}",
+                            LogEvents.OrderCompleted,
+                            order.Id,
+                            order.Status);
+
+                        await _orderEventPublisher.PublishOrderCompletedAsync(
+                            integrationEvent,
+                            cancellationToken);
+
+                        _logger.LogInformation(
+                            "{Event} - Evento OrderCompleted publicado no Kafka",
+                            LogEvents.KafkaEventPublished);
+
+                        Metrics.OrdersProcessed.Add(1);
+
+                        activity?.SetTag("order.status.final", order.Status.ToString());
+                        activity?.SetStatus(ActivityStatusCode.Ok);
+                    }
+                    catch (DbUpdateConcurrencyException ex)
+                    {
+                        Metrics.OrdersFailed.Add(1);
+
+                        activity?.SetStatus(
+                            ActivityStatusCode.Error,
+                            "Concurrency conflict while completing order");
+
+                        activity?.AddException(ex);
+
+                        _logger.LogWarning(
+                            ex,
+                            "Conflito de concorrência ao concluir ordem {OrderId}",
+                            order.Id);
+
+                        return;
+                    }
                 }
             }
+            finally
+            {
+                stopwatch.Stop();
 
-            stopwatch.Stop();
+                Metrics.OrderProcessingTime.Record(stopwatch.Elapsed.TotalMilliseconds);
 
-            Metrics.OrderProcessingTime.Record(stopwatch.Elapsed.TotalMilliseconds);
-            Metrics.OrdersProcessed.Add(1);
+                activity?.SetTag(
+                    "processing.duration.ms",
+                    stopwatch.Elapsed.TotalMilliseconds);
+            }
         }
 
         private async Task PublishStatusChangedAsync(

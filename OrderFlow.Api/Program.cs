@@ -145,15 +145,17 @@ builder.Services.AddOpenTelemetry()
         tracing
             .AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation()
+            .AddSqlClientInstrumentation()
             .AddSource("OrderFlow")
             .AddConsoleExporter();
-    });
-
-builder.Services.AddOpenTelemetry()
+    })
     .WithMetrics(metrics =>
     {
         metrics
+            .AddAspNetCoreInstrumentation()
+            .AddHttpClientInstrumentation()
             .AddMeter("OrderFlow")
+            .AddPrometheusExporter()
             .AddConsoleExporter();
     });
 
@@ -216,6 +218,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseMiddleware<UserContextLoggingMiddleware>();
+
+app.MapPrometheusScrapingEndpoint();
 
 app.MapControllers();
 

@@ -5,6 +5,7 @@ using OrderFlow.Application.Observability;
 using OrderFlow.Infrastructure.Messaging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
 
@@ -87,6 +88,14 @@ namespace OrderFlow.Worker
             {
                 var correlationId = ea.BasicProperties?.CorrelationId ?? "N/A";
 
+                using var activity = Telemetry.ActivitySource.StartActivity("RabbitMQ.ConsumeOrderCreated");
+
+                activity?.SetTag("messaging.system", "rabbitmq");
+                activity?.SetTag("messaging.destination", _settings.QueueName);
+                activity?.SetTag("messaging.operation", "consume");
+                activity?.SetTag("messaging.rabbitmq.delivery_tag", ea.DeliveryTag);
+                activity?.SetTag("correlation.id", correlationId);
+
                 using (_logger.BeginScope(new Dictionary<string, object>
                 {
                     [LogProperties.CorrelationId] = correlationId,
@@ -96,7 +105,9 @@ namespace OrderFlow.Worker
                 {
                     try
                     {
-                        _logger.LogInformation("{Event} - Mensagem recebida do RabbitMQ", LogEvents.RabbitMessageReceived);
+                        _logger.LogInformation(
+                            "{Event} - Mensagem recebida do RabbitMQ",
+                            LogEvents.RabbitMessageReceived);
 
                         var body = ea.Body.ToArray();
                         var json = Encoding.UTF8.GetString(body);
@@ -107,10 +118,21 @@ namespace OrderFlow.Worker
 
                         if (message is null)
                         {
+                            activity?.SetTag("message.valid", false);
+                            activity?.SetStatus(ActivityStatusCode.Error, "Invalid RabbitMQ message");
+
                             _logger.LogWarning("Mensagem inválida recebida.");
-                            await _channel.BasicAckAsync(ea.DeliveryTag, false, stoppingToken);
+
+                            await _channel.BasicAckAsync(
+                                ea.DeliveryTag,
+                                multiple: false,
+                                cancellationToken: stoppingToken);
+
                             return;
                         }
+
+                        activity?.SetTag("message.valid", true);
+                        activity?.SetTag("order.id", message.OrderId);
 
                         using var scope = _scopeFactory.CreateScope();
 
@@ -121,18 +143,31 @@ namespace OrderFlow.Worker
 
                         await processOrderUseCase.ExecuteAsync(message.OrderId, stoppingToken);
 
-                        await _channel.BasicAckAsync(ea.DeliveryTag, false, stoppingToken);
+                        await _channel.BasicAckAsync(
+                            ea.DeliveryTag,
+                            multiple: false,
+                            cancellationToken: stoppingToken);
 
-                        _logger.LogInformation("Mensagem processada com sucesso para OrderId {OrderId}", message.OrderId);
+                        activity?.SetStatus(ActivityStatusCode.Ok);
+
+                        _logger.LogInformation(
+                            "Mensagem processada com sucesso para OrderId {OrderId}",
+                            message.OrderId);
                     }
                     catch (Exception ex)
                     {
+                        activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                        activity?.AddException(ex);
+
                         _logger.LogError(ex, "Erro ao processar mensagem.");
 
                         var retryCount = GetRetryCount(ea.BasicProperties);
 
                         if (retryCount < _settings.MaxRetryCount)
                         {
+                            activity?.SetTag("messaging.retry", true);
+                            activity?.SetTag("messaging.retry.count", retryCount + 1);
+
                             await RepublishWithRetryAsync(ea, retryCount + 1, stoppingToken);
 
                             _logger.LogWarning(
@@ -142,6 +177,9 @@ namespace OrderFlow.Worker
                         }
                         else
                         {
+                            activity?.SetTag("messaging.dlq", true);
+                            activity?.SetTag("messaging.retry.max_reached", true);
+
                             await PublishToDeadLetterQueueAsync(ea, stoppingToken);
 
                             Metrics.OrdersFailed.Add(1);
@@ -152,7 +190,10 @@ namespace OrderFlow.Worker
                                 retryCount);
                         }
 
-                        await _channel.BasicAckAsync(ea.DeliveryTag, false, stoppingToken);
+                        await _channel.BasicAckAsync(
+                            ea.DeliveryTag,
+                            multiple: false,
+                            cancellationToken: stoppingToken);
                     }
                 }
             };
@@ -188,7 +229,10 @@ namespace OrderFlow.Worker
             };
         }
 
-        private async Task RepublishWithRetryAsync(BasicDeliverEventArgs ea, int retryCount, CancellationToken cancellationToken)
+        private async Task RepublishWithRetryAsync(
+            BasicDeliverEventArgs ea,
+            int retryCount,
+            CancellationToken cancellationToken)
         {
             if (_channel is null)
                 return;
@@ -212,7 +256,9 @@ namespace OrderFlow.Worker
                 cancellationToken: cancellationToken);
         }
 
-        private async Task PublishToDeadLetterQueueAsync(BasicDeliverEventArgs ea, CancellationToken cancellationToken)
+        private async Task PublishToDeadLetterQueueAsync(
+            BasicDeliverEventArgs ea,
+            CancellationToken cancellationToken)
         {
             if (_channel is null)
                 return;

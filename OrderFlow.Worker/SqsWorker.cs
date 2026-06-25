@@ -1,10 +1,12 @@
-﻿using System.Text.Json;
-using Amazon;
+﻿using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using OrderFlow.Application.Interfaces;
 using OrderFlow.Application.Messaging;
+using OrderFlow.Application.Observability;
 using OrderFlow.Infrastructure.Messaging;
+using System.Diagnostics;
+using System.Text.Json;
 
 namespace OrderFlow.Worker
 {
@@ -55,7 +57,7 @@ namespace OrderFlow.Worker
                         "Nenhuma mensagem encontrada na fila SQS {QueueUrl} às {CheckedAt}",
                         _settings.QueueUrl,
                         DateTime.UtcNow);
-                    
+
                     continue;
                 }
 
@@ -73,54 +75,83 @@ namespace OrderFlow.Worker
         {
             var correlationId = GetMessageAttribute(sqsMessage, "CorrelationId") ?? "N/A";
 
-            using var scope = _scopeFactory.CreateScope();
+            using var activity = Telemetry.ActivitySource.StartActivity("SQS.ConsumeOrderCreated");
 
-            var correlationContext = scope.ServiceProvider.GetRequiredService<ICorrelationContext>();
-            correlationContext.Set(correlationId);
-
-            var processOrderUseCase = scope.ServiceProvider.GetRequiredService<IProcessOrderUseCase>();
+            activity?.SetTag("messaging.system", "aws.sqs");
+            activity?.SetTag("messaging.destination", _settings.QueueUrl);
+            activity?.SetTag("messaging.operation", "consume");
+            activity?.SetTag("messaging.message.id", sqsMessage.MessageId);
+            activity?.SetTag("correlation.id", correlationId);
 
             var receiveCount = sqsMessage.Attributes.TryGetValue("ApproximateReceiveCount", out var count)
                 ? count
                 : "N/A";
 
-            try
+            activity?.SetTag("messaging.sqs.receive_count", receiveCount);
+
+            using (_logger.BeginScope(new Dictionary<string, object>
             {
-                _logger.LogInformation(
-                    "Mensagem SQS recebida. MessageId {MessageId}, CorrelationId {CorrelationId}, ReceiveCount {ReceiveCount}",
-                    sqsMessage.MessageId,
-                    correlationId,
-                    receiveCount);
-
-                var message = JsonSerializer.Deserialize<OrderCreatedMessage>(sqsMessage.Body);
-
-                if (message is null)
+                [LogProperties.CorrelationId] = correlationId,
+                ["MessageId"] = sqsMessage.MessageId,
+                ["ReceiveCount"] = receiveCount
+            }))
+            {
+                try
                 {
-                    _logger.LogWarning("Mensagem SQS inválida. MessageId {MessageId}", sqsMessage.MessageId);
+                    using var scope = _scopeFactory.CreateScope();
+
+                    var correlationContext = scope.ServiceProvider.GetRequiredService<ICorrelationContext>();
+                    correlationContext.Set(correlationId);
+
+                    var processOrderUseCase = scope.ServiceProvider.GetRequiredService<IProcessOrderUseCase>();
+
+                    _logger.LogInformation(
+                        "Mensagem SQS recebida. MessageId {MessageId}, CorrelationId {CorrelationId}, ReceiveCount {ReceiveCount}",
+                        sqsMessage.MessageId,
+                        correlationId,
+                        receiveCount);
+
+                    var message = JsonSerializer.Deserialize<OrderCreatedMessage>(sqsMessage.Body);
+
+                    if (message is null)
+                    {
+                        activity?.SetTag("message.valid", false);
+                        activity?.SetStatus(ActivityStatusCode.Error, "Invalid SQS message");
+
+                        _logger.LogWarning(
+                            "Mensagem SQS inválida. MessageId {MessageId}",
+                            sqsMessage.MessageId);
+
+                        await DeleteMessageAsync(client, sqsMessage, cancellationToken);
+
+                        return;
+                    }
+
+                    activity?.SetTag("message.valid", true);
+                    activity?.SetTag("order.id", message.OrderId);
+
+                    await processOrderUseCase.ExecuteAsync(message.OrderId, cancellationToken);
 
                     await DeleteMessageAsync(client, sqsMessage, cancellationToken);
-                    return;
+
+                    activity?.SetStatus(ActivityStatusCode.Ok);
+
+                    _logger.LogInformation(
+                        "Mensagem SQS processada com sucesso. OrderId {OrderId}",
+                        message.OrderId);
                 }
+                catch (Exception ex)
+                {
+                    Metrics.OrdersFailed.Add(1);
 
-                await processOrderUseCase.ExecuteAsync(message.OrderId, cancellationToken);
+                    activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
+                    activity?.AddException(ex);
 
-                await DeleteMessageAsync(client, sqsMessage, cancellationToken);
-
-                _logger.LogInformation(
-                    "Mensagem SQS processada com sucesso. OrderId {OrderId}",
-                    message.OrderId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(
-                    ex,
-                    "Erro ao processar mensagem SQS. MessageId {MessageId}. A mensagem não será deletada e poderá ser reenviada pelo SQS.",
-                    sqsMessage.MessageId);
-
-                // Importante:
-                // Não deletar a mensagem.
-                // O SQS irá reenviá-la após o Visibility Timeout.
-                // Após atingir maxReceiveCount, a AWS moverá a mensagem para a DLQ configurada.
+                    _logger.LogError(
+                        ex,
+                        "Erro ao processar mensagem SQS. MessageId {MessageId}. A mensagem não será deletada e poderá ser reenviada pelo SQS.",
+                        sqsMessage.MessageId);
+                }
             }
         }
 
