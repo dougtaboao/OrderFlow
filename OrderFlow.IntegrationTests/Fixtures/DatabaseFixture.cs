@@ -6,8 +6,8 @@ namespace OrderFlow.IntegrationTests.Fixtures
 {
     public sealed class DatabaseFixture : IAsyncLifetime
     {
-        private readonly MsSqlContainer _container = new MsSqlBuilder()
-            .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
+        private readonly MsSqlContainer _container = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest")
+            // .WithImage("mcr.microsoft.com/mssql/server:2022-latest")
             .WithPassword("OrderFlow@123")
             .Build();
 
@@ -36,7 +36,8 @@ namespace OrderFlow.IntegrationTests.Fixtures
             await using var context = CreateContext();
 
             context.OrderEvents.RemoveRange(context.OrderEvents);
-            context.Orders.RemoveRange(context.Orders);
+            context.OutboxMessages.RemoveRange(context.OutboxMessages);
+            context.Orders.RemoveRange(context.Orders); ;
 
             await context.SaveChangesAsync();
         }

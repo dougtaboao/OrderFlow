@@ -5,8 +5,8 @@ namespace OrderFlow.IntegrationTests.Fixtures;
 public sealed class KafkaFixture : IAsyncLifetime
 {
     public KafkaContainer Container { get; } =
-        new KafkaBuilder()
-            .WithImage("confluentinc/cp-kafka:7.6.1")
+        new KafkaBuilder("confluentinc/cp-kafka:7.6.1")
+            // .WithImage("confluentinc/cp-kafka:7.6.1")
             .Build();
 
     public async Task InitializeAsync()

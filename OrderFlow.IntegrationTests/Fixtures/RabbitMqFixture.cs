@@ -8,8 +8,8 @@ public sealed class RabbitMqFixture : IAsyncLifetime
     public const string Password = "guest";
 
     public RabbitMqContainer Container { get; } =
-        new RabbitMqBuilder()
-            .WithImage("rabbitmq:3-management")
+        new RabbitMqBuilder("rabbitmq:3-management")
+            // .WithImage("rabbitmq:3-management")
             .WithUsername(UserName)
             .WithPassword(Password)
             .Build();

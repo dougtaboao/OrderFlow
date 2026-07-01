@@ -11,22 +11,22 @@ using System.Net.Http.Json;
 
 namespace OrderFlow.IntegrationTests.Api
 {
-    public class CreateOrderApiIntegrationTests : IClassFixture<DatabaseFixture>
+    public class CreateOrderApiIntegrationTests : IClassFixture<IntegrationTestFixture>
     {
-        private readonly DatabaseFixture _databaseFixture;
+        private readonly IntegrationTestFixture _integrationTestFixture;
 
-        public CreateOrderApiIntegrationTests(DatabaseFixture databaseFixture)
+        public CreateOrderApiIntegrationTests(IntegrationTestFixture integrationTestFixture)
         {
-            _databaseFixture = databaseFixture;
+            _integrationTestFixture = integrationTestFixture;
         }
 
         [Fact]
         public async Task Post_Orders_Should_Create_Order()
         {
-            await _databaseFixture.ClearDatabaseAsync();
+            await _integrationTestFixture.ResetAsync();
 
             // Arrange
-            await using var apiFactory = new OrderFlowApiFactory(_databaseFixture);
+            await using var apiFactory = new OrderFlowApiFactory(_integrationTestFixture);
             var client = apiFactory.CreateClient();
 
             client.DefaultRequestHeaders.Authorization =
@@ -58,7 +58,7 @@ namespace OrderFlow.IntegrationTests.Api
 
             Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-            await using var context = _databaseFixture.CreateContext();
+            await using var context = _integrationTestFixture.CreateContext();
 
             var order = await context.Orders
                 .FirstOrDefaultAsync(x => x.ExternalReference == request.ExternalReference);
@@ -73,10 +73,10 @@ namespace OrderFlow.IntegrationTests.Api
         [Fact]
         public async Task Should_Create_Order_And_Get_By_Id()
         {
-            await _databaseFixture.ClearDatabaseAsync();
+            await _integrationTestFixture.ResetAsync();
 
             // Arrange
-            await using var apiFactory = new OrderFlowApiFactory(_databaseFixture);
+            await using var apiFactory = new OrderFlowApiFactory(_integrationTestFixture);
 
             var client = apiFactory.CreateClient();
 
@@ -127,10 +127,10 @@ namespace OrderFlow.IntegrationTests.Api
         [Fact]
         public async Task Get_Order_By_Id_Should_Return_NotFound_When_Order_Does_Not_Exist()
         {
-            await _databaseFixture.ClearDatabaseAsync();
+            await _integrationTestFixture.ResetAsync();
 
             // Arrange
-            await using var apiFactory = new OrderFlowApiFactory(_databaseFixture);
+            await using var apiFactory = new OrderFlowApiFactory(_integrationTestFixture);
 
             var client = apiFactory.CreateClient();
 
@@ -155,10 +155,10 @@ namespace OrderFlow.IntegrationTests.Api
         [Fact]
         public async Task Post_Order_Should_Return_Unauthorized_When_User_Is_Not_Authenticated()
         {
-            await _databaseFixture.ClearDatabaseAsync();
+            await _integrationTestFixture.ResetAsync();
 
             // Arrange
-            await using var apiFactory = new OrderFlowApiFactory(_databaseFixture);
+            await using var apiFactory = new OrderFlowApiFactory(_integrationTestFixture);
 
             var client = apiFactory.CreateClient();
 
@@ -189,10 +189,10 @@ namespace OrderFlow.IntegrationTests.Api
         [Fact]
         public async Task Post_Order_Should_Return_BadRequest_When_Amount_Is_Invalid()
         {
-            await _databaseFixture.ClearDatabaseAsync();
+            await _integrationTestFixture.ResetAsync();
 
             // Arrange
-            await using var apiFactory = new OrderFlowApiFactory(_databaseFixture);
+            await using var apiFactory = new OrderFlowApiFactory(_integrationTestFixture);
 
             var client = apiFactory.CreateClient();
 
@@ -225,10 +225,10 @@ namespace OrderFlow.IntegrationTests.Api
         [Fact]
         public async Task Get_Order_By_Id_Should_Return_Unauthorized_When_User_Is_Not_Authenticated()
         {
-            await _databaseFixture.ClearDatabaseAsync();
+            await _integrationTestFixture.ResetAsync();
 
             // Arrange
-            await using var apiFactory = new OrderFlowApiFactory(_databaseFixture);
+            await using var apiFactory = new OrderFlowApiFactory(_integrationTestFixture);
 
             var client = apiFactory.CreateClient();
 
@@ -248,10 +248,10 @@ namespace OrderFlow.IntegrationTests.Api
         [Fact]
         public async Task Post_Order_Should_Create_Order_And_Outbox()
         {
-            await _databaseFixture.ClearDatabaseAsync();
+            await _integrationTestFixture.ResetAsync();
 
             // Arrange
-            await using var apiFactory = new OrderFlowApiFactory(_databaseFixture);
+            await using var apiFactory = new OrderFlowApiFactory(_integrationTestFixture);
 
             var client = apiFactory.CreateClient();
 
@@ -280,7 +280,7 @@ namespace OrderFlow.IntegrationTests.Api
 
             Assert.NotNull(created);
 
-            await using var context = _databaseFixture.CreateContext();
+            await using var context = _integrationTestFixture.CreateContext();
 
             var order = await context.Orders
                 .FirstOrDefaultAsync(x => x.Id == created!.OrderId);
@@ -298,10 +298,10 @@ namespace OrderFlow.IntegrationTests.Api
         [Fact]
         public async Task Post_Order_Should_Return_Forbidden_When_User_Does_Not_Have_CreateOrder_Role()
         {
-            await _databaseFixture.ClearDatabaseAsync();
+            await _integrationTestFixture.ResetAsync();
 
             // Arrange
-            await using var apiFactory = new OrderFlowApiFactory(_databaseFixture);
+            await using var apiFactory = new OrderFlowApiFactory(_integrationTestFixture);
 
             var client = apiFactory.CreateClient();
 

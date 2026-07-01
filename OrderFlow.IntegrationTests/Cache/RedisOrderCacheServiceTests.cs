@@ -9,8 +9,8 @@ namespace OrderFlow.IntegrationTests.Cache
 {
     public class RedisOrderCacheServiceTests : IAsyncLifetime
     {
-        private readonly RedisContainer _redisContainer = new RedisBuilder()
-            .WithImage("redis:7")
+        private readonly RedisContainer _redisContainer = new RedisBuilder("redis:7")
+            // .WithImage("redis:7")
             .Build();
 
         private IConnectionMultiplexer _connection = null!;

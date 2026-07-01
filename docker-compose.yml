@@ -36,6 +36,12 @@ services:
       - "${RABBITMQ_MANAGEMENT_PORT}:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
     networks:
       - orderflow-network
 
@@ -132,11 +138,16 @@ services:
       Serilog__WriteTo__1__Name: "Seq"
       Serilog__WriteTo__1__Args__serverUrl: "http://seq:5341"
     depends_on:
-      - sqlserver
-      - redis
-      - kafka
-      - rabbitmq
-      - seq
+      rabbitmq:
+        condition: service_healthy
+      sqlserver:
+        condition: service_started
+      redis:
+        condition: service_started
+      kafka:
+        condition: service_started
+      seq:
+        condition: service_started
     networks:
       - orderflow-network
       
@@ -153,6 +164,31 @@ services:
       - seq_data:/data
     networks:
       - orderflow-network
+ 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: orderflow-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    depends_on:
+      - orderflow-api
+    networks:
+      - orderflow-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: orderflow-grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - orderflow-network
 
 volumes:
   sqlserver_data:
@@ -161,6 +197,8 @@ volumes:
   kafka_data:
   seq_data:
   dataprotection_keys:
+  prometheus_data:
+  grafana_data:
 
 networks:
   orderflow-network:

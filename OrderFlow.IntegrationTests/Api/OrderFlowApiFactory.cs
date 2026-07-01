@@ -8,6 +8,8 @@ using OrderFlow.Application.Security;
 using OrderFlow.Infrastructure.Data;
 using OrderFlow.IntegrationTests.Fakes;
 using OrderFlow.IntegrationTests.Fixtures;
+using Microsoft.Extensions.Configuration;
+using StackExchange.Redis;
 
 using Microsoft.AspNetCore.Authentication;
 
@@ -15,16 +17,25 @@ namespace OrderFlow.IntegrationTests.Api
 {
     public class OrderFlowApiFactory : WebApplicationFactory<Program>
     {
-        private readonly DatabaseFixture _databaseFixture;
+        private readonly IntegrationTestFixture _integrationTestFixture;
 
-        public OrderFlowApiFactory(DatabaseFixture databaseFixture)
+        public OrderFlowApiFactory(IntegrationTestFixture integrationTestFixture)
         {
-            _databaseFixture = databaseFixture;
+            _integrationTestFixture = integrationTestFixture;
         }
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
         {
             builder.UseEnvironment("Testing");
+
+            builder.ConfigureAppConfiguration((context, config) =>
+            {
+                config.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["Redis:ConnectionString"] = _integrationTestFixture.RedisConnectionString,
+                    ["Redis:OrderCacheExpirationMinutes"] = "5"
+                });
+            });
 
             builder.ConfigureServices(services =>
             {
@@ -36,8 +47,13 @@ namespace OrderFlow.IntegrationTests.Api
 
                 services.AddDbContext<OrderFlowDbContext>(options =>
                 {
-                    options.UseSqlServer(_databaseFixture.ConnectionString);
+                    options.UseSqlServer(_integrationTestFixture.SqlServerConnectionString);
                 });
+
+                services.RemoveAll<IConnectionMultiplexer>();
+
+                services.AddSingleton<IConnectionMultiplexer>(_ =>
+                    ConnectionMultiplexer.Connect(_integrationTestFixture.RedisConnectionString));
 
                 services.RemoveAll<ICurrentUser>();
 
@@ -48,6 +64,8 @@ namespace OrderFlow.IntegrationTests.Api
                     .AddScheme<AuthenticationSchemeOptions, FakeAuthenticationHandler>(
                         "Test",
                         options => { });
+
+                
             });
         }
     }
