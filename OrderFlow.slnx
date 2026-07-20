@@ -12,5 +12,6 @@
   <Project Path="OrderFlow.Grpc/OrderFlow.Grpc.csproj" />
   <Project Path="OrderFlow.Infrastructure/OrderFlow.Infrastructure.csproj" />
   <Project Path="OrderFlow.IntegrationTests/OrderFlow.IntegrationTests.csproj" />
+  <Project Path="OrderFlow.Simulator/OrderFlow.Simulator.csproj" Id="2c380641-263d-4f7e-912e-979a8cff6e1e" />
   <Project Path="OrderFlow.Worker/OrderFlow.Worker.csproj" />
 </Solution>

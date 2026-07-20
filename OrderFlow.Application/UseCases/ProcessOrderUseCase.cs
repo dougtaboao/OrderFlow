@@ -151,7 +151,7 @@ namespace OrderFlow.Application.UseCases
                         return;
                     }
 
-                    await Task.Delay(2000, cancellationToken);
+                    // await Task.Delay(2000, cancellationToken);
 
                     var strategy = _strategyResolver.Resolve(order.Type);
 
