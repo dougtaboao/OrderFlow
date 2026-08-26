@@ -11,5 +11,6 @@
         public string QueueName { get; set; } = "order-created";
         public string DeadLetterQueueName { get; set; } = "order-created-dlq";
         public int MaxRetryCount { get; set; } = 3;
+        public ushort PrefetchCount { get; set; } = 10;
     }
 }

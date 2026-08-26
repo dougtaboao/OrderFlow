@@ -1,0 +1,20 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "panels": [
+    { "type": "stat", "title": "Ordens criadas", "id": 1, "gridPos": { "h": 8, "w": 6, "x": 0, "y": 0 }, "targets": [{ "expr": "sum(orders_created_total)", "refId": "A" }] },
+    { "type": "stat", "title": "Ordens processadas", "id": 2, "gridPos": { "h": 8, "w": 6, "x": 6, "y": 0 }, "targets": [{ "expr": "sum(orders_processed_total)", "refId": "A" }] },
+    { "type": "stat", "title": "Falhas", "id": 3, "gridPos": { "h": 8, "w": 6, "x": 12, "y": 0 }, "targets": [{ "expr": "sum(orders_failed_total)", "refId": "A" }] },
+    { "type": "timeseries", "title": "Taxa de processamento", "id": 4, "gridPos": { "h": 8, "w": 6, "x": 18, "y": 0 }, "targets": [{ "expr": "sum(rate(orders_processed_total[1m]))", "refId": "A" }] },
+    { "type": "timeseries", "title": "Latência p95", "id": 5, "gridPos": { "h": 9, "w": 12, "x": 0, "y": 8 }, "targets": [{ "expr": "histogram_quantile(0.95, sum(rate(order_processing_time_milliseconds_bucket[5m])) by (le))", "refId": "A" }] },
+    { "type": "timeseries", "title": "CPU e memória do Worker", "id": 6, "gridPos": { "h": 9, "w": 12, "x": 12, "y": 8 }, "targets": [{ "expr": "process_cpu_utilization{job=\"orderflow-worker\"}", "legendFormat": "CPU", "refId": "A" }, { "expr": "process_memory_usage_bytes{job=\"orderflow-worker\"}", "legendFormat": "Memória", "refId": "B" }] }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 41,
+  "tags": ["orderflow"],
+  "templating": { "list": [] },
+  "time": { "from": "now-30m", "to": "now" },
+  "title": "OrderFlow - Visão geral",
+  "uid": "orderflow-overview",
+  "version": 1
+}

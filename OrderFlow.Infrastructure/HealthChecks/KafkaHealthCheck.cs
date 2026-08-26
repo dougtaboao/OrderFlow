@@ -26,15 +26,23 @@ namespace OrderFlow.Infrastructure.HealthChecks
 
                 using var adminClient = new AdminClientBuilder(config).Build();
 
-                var metadata = adminClient.GetMetadata(
-                    _settings.OrderCompletedTopic,
-                    TimeSpan.FromSeconds(5));
+                var metadata = adminClient.GetMetadata(TimeSpan.FromSeconds(5));
 
-                if (metadata.Topics.Any(t => t.Topic == _settings.OrderCompletedTopic))
-                    return Task.FromResult(HealthCheckResult.Healthy("Kafka acessível."));
+                var requiredTopics = new[]
+                {
+                    _settings.OrderCompletedTopic,
+                    _settings.OrderStatusChangedTopic
+                };
+
+                var missingTopics = requiredTopics
+                    .Where(required => metadata.Topics.All(topic => topic.Topic != required || topic.Error.Code != ErrorCode.NoError))
+                    .ToArray();
+
+                if (missingTopics.Length == 0)
+                    return Task.FromResult(HealthCheckResult.Healthy("Kafka e tópicos obrigatórios acessíveis."));
 
                 return Task.FromResult(
-                    HealthCheckResult.Unhealthy($"Tópico Kafka {_settings.OrderCompletedTopic} não encontrado."));
+                    HealthCheckResult.Unhealthy($"Tópicos Kafka ausentes: {string.Join(", ", missingTopics)}."));
             }
             catch (Exception ex)
             {

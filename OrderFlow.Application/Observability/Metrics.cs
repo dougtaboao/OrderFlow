@@ -29,5 +29,20 @@ namespace OrderFlow.Application.Observability
 
         public static readonly Counter<int> OrderCacheRemovals =
             Meter.CreateCounter<int>("order_cache_removals");
+
+        public static readonly Counter<int> RabbitMessagesReceived =
+            Meter.CreateCounter<int>("rabbit_messages_received");
+
+        public static readonly Counter<int> RabbitMessagesRetried =
+            Meter.CreateCounter<int>("rabbit_messages_retried");
+
+        public static readonly Counter<int> RabbitMessagesDeadLettered =
+            Meter.CreateCounter<int>("rabbit_messages_dead_lettered");
+
+        public static readonly Counter<int> KafkaAuditEventsConsumed =
+            Meter.CreateCounter<int>("kafka_audit_events_consumed");
+
+        public static readonly Counter<int> KafkaConsumerErrors =
+            Meter.CreateCounter<int>("kafka_consumer_errors");
     }
 }

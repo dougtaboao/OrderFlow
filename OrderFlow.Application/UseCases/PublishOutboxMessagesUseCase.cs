@@ -73,7 +73,7 @@ namespace OrderFlow.Application.UseCases
                             LogEvents.OrderProcessingFailed);
                     }
 
-                    _outboxMessageRepository.Update(message);
+                    await _outboxMessageRepository.Update(message);
                 }
             }
 

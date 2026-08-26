@@ -36,32 +36,69 @@ services:
       - "${RABBITMQ_MANAGEMENT_PORT}:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 10s
+      test:
+        [
+          "CMD",
+          "rabbitmq-diagnostics",
+          "-q",
+          "check_port_connectivity"
+        ]
+      interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 20
       start_period: 20s
     networks:
       - orderflow-network
 
   kafka:
-    image: apache/kafka:latest
+    image: apache/kafka:4.1.2
     container_name: orderflow-kafka
+    hostname: kafka
+
     ports:
       - "${KAFKA_PORT}:9092"
+
     environment:
       KAFKA_NODE_ID: 1
-      KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: INTERNAL://:29092,EXTERNAL://:9092,CONTROLLER://:9093
-      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://localhost:9092
-      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
-      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_PROCESS_ROLES: "broker,controller"
+
+      KAFKA_LISTENERS: "INTERNAL://0.0.0.0:29092,EXTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093"
+
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://kafka:29092,EXTERNAL://localhost:${KAFKA_PORT}"
+
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT"
+
+      KAFKA_INTER_BROKER_LISTENER_NAME: "INTERNAL"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_MIN_INSYNC_REPLICAS: 1
+
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+
+      # Garante que o volume abaixo seja realmente utilizado.
+      KAFKA_LOG_DIRS: "/var/lib/kafka/data"
+
     volumes:
       - kafka_data:/var/lib/kafka/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:29092 --list > /dev/null 2>&1"
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
+
     networks:
       - orderflow-network
 
@@ -83,20 +120,30 @@ services:
       Kafka__BootstrapServers: "kafka:29092"
 
       RabbitMq__HostName: "rabbitmq"
+      RabbitMq__PrefetchCount: 10
 
       Serilog__WriteTo__1__Name: "Seq"
       Serilog__WriteTo__1__Args__serverUrl: "http://seq:5341"
 
     depends_on:
-      - sqlserver
-      - redis
-      - kafka
-      - rabbitmq
-      - seq
+      sqlserver:
+        condition: service_started
+
+      redis:
+        condition: service_started
+
+      kafka:
+        condition: service_healthy
+
+      rabbitmq:
+        condition: service_healthy
+
+      seq:
+        condition: service_started
 
     networks:
       - orderflow-network
-      
+
   orderflow-api:
     build:
       context: .
@@ -112,45 +159,172 @@ services:
       RabbitMq__HostName: "rabbitmq"
       Serilog__WriteTo__1__Name: "Seq"
       Serilog__WriteTo__1__Args__serverUrl: "http://seq:5341"
+      OpenTelemetry__OtlpEndpoint: "http://otel-collector:4317"
     depends_on:
-      - sqlserver
-      - redis
-      - kafka
-      - rabbitmq
-      - seq
-    volumes:
-      - dataprotection_keys:/root/.aspnet/DataProtection-Keys
-    networks:
-      - orderflow-network
-      
-  orderflow-worker:
-    build:
-      context: .
-      dockerfile: OrderFlow.Worker/Dockerfile
-    container_name: orderflow-worker
-    environment:
-      DOTNET_ENVIRONMENT: "Development"
-      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=OrderFlowDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
-      Redis__ConnectionString: "redis:6379"
-      Kafka__BootstrapServers: "kafka:29092"
-      RabbitMq__HostName: "rabbitmq"
-      Messaging__Provider: "RabbitMq"
-      Serilog__WriteTo__1__Name: "Seq"
-      Serilog__WriteTo__1__Args__serverUrl: "http://seq:5341"
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
       sqlserver:
         condition: service_started
       redis:
         condition: service_started
       kafka:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      seq:
+        condition: service_started
+      otel-collector:
+        condition: service_started
+    volumes:
+      - dataprotection_keys:/root/.aspnet/DataProtection-Keys
+    networks:
+      - orderflow-network
+
+  orderflow-worker:
+    build:
+      context: .
+      dockerfile: OrderFlow.Worker/Dockerfile
+    # container_name: orderflow-worker
+    # ports:
+      # - "5002:8080"
+    expose:
+      - "8080"
+    environment:
+      DOTNET_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: "http://+:8080"
+      Workers__EnableOrderConsumer: "true"
+      Workers__EnableOutboxPublisher: "false"
+      Workers__EnableKafkaAudit: "false"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=OrderFlowDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
+      Redis__ConnectionString: "redis:6379"
+      Kafka__BootstrapServers: "kafka:29092"
+      Kafka__Topics__0__Name: "order-completed"
+      Kafka__Topics__0__NumPartitions: 3
+      Kafka__Topics__0__ReplicationFactor: 1
+      Kafka__Topics__1__Name: "order-status-changed"
+      Kafka__Topics__1__NumPartitions: 3
+      Kafka__Topics__1__ReplicationFactor: 1
+      Kafka__Topics__2__Name: "order-test"
+      Kafka__Topics__2__NumPartitions: 2
+      Kafka__Topics__2__ReplicationFactor: 1
+      RabbitMq__HostName: "rabbitmq"
+      RabbitMq__PrefetchCount: 10
+      Messaging__Provider: "RabbitMq"
+      Serilog__WriteTo__1__Name: "Seq"
+      Serilog__WriteTo__1__Args__serverUrl: "http://seq:5341"
+      OpenTelemetry__OtlpEndpoint: "http://otel-collector:4317"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      sqlserver:
+        condition: service_started
+      redis:
         condition: service_started
       seq:
         condition: service_started
+      otel-collector:
+        condition: service_started
     networks:
       - orderflow-network
-      
+
+  orderflow-outbox:
+    build:
+      context: .
+      dockerfile: OrderFlow.Worker/Dockerfile
+    # container_name: orderflow-worker
+    # ports:
+      # - "5002:8080"
+    expose:
+      - "8080"
+    environment:
+      DOTNET_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: "http://+:8080"
+      Workers__EnableOrderConsumer: "false"
+      Workers__EnableOutboxPublisher: "true"
+      Workers__EnableKafkaAudit: "false"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=OrderFlowDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
+      Redis__ConnectionString: "redis:6379"
+      Kafka__BootstrapServers: "kafka:29092"
+      Kafka__Topics__0__Name: "order-completed"
+      Kafka__Topics__0__NumPartitions: 3
+      Kafka__Topics__0__ReplicationFactor: 1
+      Kafka__Topics__1__Name: "order-status-changed"
+      Kafka__Topics__1__NumPartitions: 3
+      Kafka__Topics__1__ReplicationFactor: 1
+      Kafka__Topics__2__Name: "order-test"
+      Kafka__Topics__2__NumPartitions: 2
+      Kafka__Topics__2__ReplicationFactor: 1
+      RabbitMq__HostName: "rabbitmq"
+      RabbitMq__PrefetchCount: 10
+      Messaging__Provider: "RabbitMq"
+      Serilog__WriteTo__1__Name: "Seq"
+      Serilog__WriteTo__1__Args__serverUrl: "http://seq:5341"
+      OpenTelemetry__OtlpEndpoint: "http://otel-collector:4317"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      sqlserver:
+        condition: service_started
+      redis:
+        condition: service_started
+      seq:
+        condition: service_started
+      otel-collector:
+        condition: service_started
+    networks:
+      - orderflow-network
+
+  orderflow-kafka-audit:
+    build:
+      context: .
+      dockerfile: OrderFlow.Worker/Dockerfile
+    # container_name: orderflow-worker
+    # ports:
+      # - "5002:8080"
+    expose:
+      - "8080"
+    environment:
+      DOTNET_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: "http://+:8080"
+      Workers__EnableOrderConsumer: "false"
+      Workers__EnableOutboxPublisher: "false"
+      Workers__EnableKafkaAudit: "true"
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=OrderFlowDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
+      Redis__ConnectionString: "redis:6379"
+      Kafka__BootstrapServers: "kafka:29092"
+      Kafka__Topics__0__Name: "order-completed"
+      Kafka__Topics__0__NumPartitions: 3
+      Kafka__Topics__0__ReplicationFactor: 1
+      Kafka__Topics__1__Name: "order-status-changed"
+      Kafka__Topics__1__NumPartitions: 3
+      Kafka__Topics__1__ReplicationFactor: 1
+      Kafka__Topics__2__Name: "order-test"
+      Kafka__Topics__2__NumPartitions: 2
+      Kafka__Topics__2__ReplicationFactor: 1
+      RabbitMq__HostName: "rabbitmq"
+      RabbitMq__PrefetchCount: 10
+      Messaging__Provider: "RabbitMq"
+      Serilog__WriteTo__1__Name: "Seq"
+      Serilog__WriteTo__1__Args__serverUrl: "http://seq:5341"
+      OpenTelemetry__OtlpEndpoint: "http://otel-collector:4317"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      sqlserver:
+        condition: service_started
+      redis:
+        condition: service_started
+      seq:
+        condition: service_started
+      otel-collector:
+        condition: service_started
+    networks:
+      - orderflow-network
+
   seq:
     image: datalust/seq:latest
     container_name: orderflow-seq
@@ -164,7 +338,7 @@ services:
       - seq_data:/data
     networks:
       - orderflow-network
- 
+
   prometheus:
     image: prom/prometheus:latest
     container_name: orderflow-prometheus
@@ -175,6 +349,7 @@ services:
       - prometheus_data:/prometheus
     depends_on:
       - orderflow-api
+      - orderflow-worker
     networks:
       - orderflow-network
 
@@ -185,8 +360,22 @@ services:
       - "3000:3000"
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
     depends_on:
       - prometheus
+    networks:
+      - orderflow-network
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.132.0
+    container_name: orderflow-otel-collector
+    command: ["--config=/etc/otelcol-contrib/config.yml"]
+    volumes:
+      - ./observability/otel-collector.yml:/etc/otelcol-contrib/config.yml:ro
+    ports:
+      - "4317:4317"
+      - "4318:4318"
     networks:
       - orderflow-network
 

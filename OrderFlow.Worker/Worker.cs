@@ -66,7 +66,7 @@ namespace OrderFlow.Worker
 
             await _channel.BasicQosAsync(
                 prefetchSize: 0,
-                prefetchCount: 1,
+                prefetchCount: _settings.PrefetchCount,
                 global: false,
                 cancellationToken: cancellationToken);
 
@@ -108,6 +108,8 @@ namespace OrderFlow.Worker
                         _logger.LogInformation(
                             "{Event} - Mensagem recebida do RabbitMQ",
                             LogEvents.RabbitMessageReceived);
+
+                        Metrics.RabbitMessagesReceived.Add(1);
 
                         var body = ea.Body.ToArray();
                         var json = Encoding.UTF8.GetString(body);
@@ -169,6 +171,7 @@ namespace OrderFlow.Worker
                             activity?.SetTag("messaging.retry.count", retryCount + 1);
 
                             await RepublishWithRetryAsync(ea, retryCount + 1, stoppingToken);
+                            Metrics.RabbitMessagesRetried.Add(1);
 
                             _logger.LogWarning(
                                  "{Event} - Mensagem reenfileirada para retry {RetryCount}",
@@ -183,6 +186,7 @@ namespace OrderFlow.Worker
                             await PublishToDeadLetterQueueAsync(ea, stoppingToken);
 
                             Metrics.OrdersFailed.Add(1);
+                            Metrics.RabbitMessagesDeadLettered.Add(1);
 
                             _logger.LogError(
                                 "{Event} - Mensagem enviada para DLQ após {RetryCount} tentativas",

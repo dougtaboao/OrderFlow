@@ -5,6 +5,7 @@ using OrderFlow.Application.Messaging;
 using OrderFlow.Infrastructure.Messaging;
 using OrderFlow.Domain.Interfaces;
 using OrderFlow.Domain.ReadModels;
+using OrderFlow.Application.Observability;
 
 namespace OrderFlow.Worker
 {
@@ -24,12 +25,7 @@ namespace OrderFlow.Worker
             _scopeFactory = scopeFactory;
         }
 
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
-        {
-            return Task.Run(() => ConsumeAsync(stoppingToken), stoppingToken);
-        }
-
-        private async void ConsumeAsync(CancellationToken stoppingToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             var config = new ConsumerConfig
             {
@@ -48,11 +44,12 @@ namespace OrderFlow.Worker
                 _settings.OrderStatusChangedTopic,
                 config.GroupId);
 
-            try
+            while (!stoppingToken.IsCancellationRequested)
             {
-                while (!stoppingToken.IsCancellationRequested)
+                ConsumeResult<string, string>? result = null;
+                try
                 {
-                    var result = consumer.Consume(stoppingToken);
+                    result = consumer.Consume(stoppingToken);
 
                     var correlationId = GetHeaderValue(result.Message.Headers, "correlation-id");
 
@@ -102,16 +99,34 @@ namespace OrderFlow.Worker
                         result.Offset.Value);
 
                     consumer.Commit(result);
+                    Metrics.KafkaAuditEventsConsumed.Add(1);
+                }
+                catch (ConsumeException ex)
+                {
+                    Metrics.KafkaConsumerErrors.Add(1);
+                    _logger.LogError(ex, "Falha ao consumir Kafka. Code {Code}, Reason {Reason}", ex.Error.Code, ex.Error.Reason);
+                    await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken);
+                }
+                catch (JsonException ex)
+                {
+                    Metrics.KafkaConsumerErrors.Add(1);
+                    _logger.LogError(ex, "Payload inválido recebido do Kafka; offset confirmado para evitar poison loop.");
+                    if (result is not null)
+                        consumer.Commit(result);
+                }
+                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Erro inesperado no consumer de auditoria Kafka.");
+                    await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken);
                 }
             }
-            catch (OperationCanceledException)
-            {
-                _logger.LogInformation("Kafka audit consumer encerrado.");
-            }
-            finally
-            {
-                consumer.Close();
-            }
+
+            consumer.Close();
+            _logger.LogInformation("Kafka audit consumer encerrado.");
         }
 
         private static string GetHeaderValue(Headers headers, string key)

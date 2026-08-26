@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using OrderFlow.Api.Middlewares;
@@ -111,20 +111,11 @@ builder.Services.AddSwaggerGen(options =>
         Description = "Informe o token JWT no formato: Bearer {seu token}"
     });
 
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
+    options.AddSecurityRequirement(document =>
+        new OpenApiSecurityRequirement
         {
-            new OpenApiSecurityScheme
-            {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
-    });
+            [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+        });
 });
 
 var rabbitMqSettings = builder.Configuration
@@ -139,6 +130,8 @@ var kafkaSettings = builder.Configuration
 
 builder.Services.AddSingleton(kafkaSettings);
 
+var otlpEndpoint = builder.Configuration["OpenTelemetry:OtlpEndpoint"];
+
 builder.Services.AddOpenTelemetry()
     .WithTracing(tracing =>
     {
@@ -148,6 +141,9 @@ builder.Services.AddOpenTelemetry()
             .AddSqlClientInstrumentation()
             .AddSource("OrderFlow")
             .AddConsoleExporter();
+
+        if (!string.IsNullOrWhiteSpace(otlpEndpoint))
+            tracing.AddOtlpExporter(options => options.Endpoint = new Uri(otlpEndpoint));
     })
     .WithMetrics(metrics =>
     {
@@ -157,6 +153,9 @@ builder.Services.AddOpenTelemetry()
             .AddMeter("OrderFlow")
             .AddPrometheusExporter()
             .AddConsoleExporter();
+
+        if (!string.IsNullOrWhiteSpace(otlpEndpoint))
+            metrics.AddOtlpExporter(options => options.Endpoint = new Uri(otlpEndpoint));
     });
 
 builder.Services.AddDbContext<OrderFlowDbContext>(options =>
@@ -165,9 +164,9 @@ builder.Services.AddDbContext<OrderFlowDbContext>(options =>
 builder.Services
     .AddHealthChecks()
     .AddCheck("self", () => HealthCheckResult.Healthy(), tags: new[] { "live" })
-    .AddDbContextCheck<OrderFlowDbContext>("sqlserver")
-    .AddCheck<RabbitMqHealthCheck>("rabbitmq")
-    .AddCheck<KafkaHealthCheck>("kafka");
+    .AddDbContextCheck<OrderFlowDbContext>("sqlserver", tags: new[] { "ready" })
+    .AddCheck<RabbitMqHealthCheck>("rabbitmq", tags: new[] { "ready" })
+    .AddCheck<KafkaHealthCheck>("kafka", tags: new[] { "ready" });
 
 var redisSettings = builder.Configuration
     .GetSection("Redis")

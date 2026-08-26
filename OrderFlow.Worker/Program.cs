@@ -1,5 +1,8 @@
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using OrderFlow.Application.Interfaces;
 using OrderFlow.Application.Services.Orders;
@@ -9,6 +12,7 @@ using OrderFlow.Domain.Interfaces;
 using OrderFlow.Infrastructure.Cache;
 using OrderFlow.Infrastructure.Data;
 using OrderFlow.Infrastructure.Gateways;
+using OrderFlow.Infrastructure.HealthChecks;
 using OrderFlow.Infrastructure.Messaging;
 using OrderFlow.Infrastructure.Observability;
 using OrderFlow.Infrastructure.Repositories;
@@ -16,116 +20,109 @@ using OrderFlow.Worker;
 using Serilog;
 using StackExchange.Redis;
 
-var builder = Host.CreateApplicationBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
+builder.Host.UseSerilog((context, configuration) => configuration
+    .ReadFrom.Configuration(context.Configuration)
+    .Enrich.FromLogContext()
+    //.WriteTo.Console()
+    .WriteTo.File("logs/orderflow-worker-.log", rollingInterval: RollingInterval.Day));
 
-builder.Services.AddSerilog((services, loggerConfiguration) =>
-{
-    loggerConfiguration
-        .ReadFrom.Configuration(builder.Configuration)
-        .Enrich.FromLogContext()
-        .WriteTo.Console(
-            outputTemplate: "{Timestamp:HH:mm:ss} [{Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}")
-        .WriteTo.File(
-            path: "logs/orderflow-worker-.log",
-            rollingInterval: RollingInterval.Day,
-            outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {Message:lj} {Properties:j}{NewLine}{Exception}");
-        });
+builder.Services.AddDbContext<OrderFlowDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-    builder.Services.AddDbContext<OrderFlowDbContext>(options =>
-        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+var messagingSettings = builder.Configuration.GetSection("Messaging").Get<MessagingSettings>() ?? new();
+var rabbitMqSettings = builder.Configuration.GetSection("RabbitMq").Get<RabbitMqSettings>() ?? new();
+var workerSettings = builder.Configuration.GetSection("Workers").Get<WorkerSettings>() ?? new ();
+var sqsSettings = builder.Configuration.GetSection("Sqs").Get<SqsSettings>() ?? new();
+var kafkaSettings = builder.Configuration.GetSection("Kafka").Get<KafkaSettings>() ?? new();
+var redisSettings = builder.Configuration.GetSection("Redis").Get<RedisSettings>() ?? new();
 
-    var messagingSettings = builder.Configuration
-    .GetSection("Messaging")
-    .Get<MessagingSettings>() ?? new MessagingSettings();
+builder.Services.Configure<KafkaOptions>(builder.Configuration.GetSection(KafkaOptions.SectionName));
+builder.Services.AddSingleton<IKafkaTopicInitializer, KafkaTopicInitializer>();
+builder.Services.AddSingleton(messagingSettings);
+builder.Services.AddSingleton(rabbitMqSettings);
+builder.Services.AddSingleton(sqsSettings);
+builder.Services.AddSingleton(kafkaSettings);
+builder.Services.AddSingleton(redisSettings);
+builder.Services.AddSingleton(workerSettings);
 
-    var rabbitMqSettings = builder.Configuration
-        .GetSection("RabbitMq")
-        .Get<RabbitMqSettings>() ?? new RabbitMqSettings();
-
-    var sqsSettings = builder.Configuration
-    .GetSection("Sqs")
-    .Get<SqsSettings>() ?? new SqsSettings();
-
-    var kafkaSettings = builder.Configuration
-        .GetSection("Kafka")
-        .Get<KafkaSettings>() ?? new KafkaSettings();
-
-    builder.Services.AddOpenTelemetry()
+var otlpEndpoint = builder.Configuration["OpenTelemetry:OtlpEndpoint"];
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService("orderflow-worker"))
     .WithTracing(tracing =>
     {
-        tracing
-            .AddSource("OrderFlow")
-            .AddConsoleExporter();
-    });
-
-    builder.Services.AddOpenTelemetry()
+        tracing.AddSource("OrderFlow").AddHttpClientInstrumentation();
+        if (!string.IsNullOrWhiteSpace(otlpEndpoint)) tracing.AddOtlpExporter(o => o.Endpoint = new Uri(otlpEndpoint));
+    })
     .WithMetrics(metrics =>
     {
-        metrics.AddMeter("OrderFlow");
-
-        if (builder.Configuration.GetValue<bool>("OpenTelemetry:EnableConsoleMetrics"))
-        {
-            metrics.AddConsoleExporter();
-        }
+        metrics.AddMeter("OrderFlow").AddRuntimeInstrumentation().AddPrometheusExporter();
+        if (!string.IsNullOrWhiteSpace(otlpEndpoint)) metrics.AddOtlpExporter(o => o.Endpoint = new Uri(otlpEndpoint));
     });
 
-    builder.Services.AddSingleton(messagingSettings);
-    builder.Services.AddSingleton(sqsSettings);
-    builder.Services.AddSingleton(rabbitMqSettings);
-    builder.Services.AddSingleton(kafkaSettings);
+builder.Services.AddHealthChecks()
+    .AddCheck("self", () => HealthCheckResult.Healthy(), tags: ["live"])
+    .AddDbContextCheck<OrderFlowDbContext>("sqlserver", tags: ["ready"])
+    .AddCheck<RabbitMqHealthCheck>("rabbitmq", tags: ["ready"])
+    .AddCheck<KafkaHealthCheck>("kafka", tags: ["ready"]);
 
-    builder.Services.AddScoped<ICorrelationContext, CorrelationContext>();
-    builder.Services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<OrderFlowDbContext>());
-
-    builder.Services.AddScoped<IOrderRepository, OrderRepository>();
-    builder.Services.AddScoped<IOutboxMessageRepository, OutboxMessageRepository>();
-
-    builder.Services.AddScoped<IProcessOrderUseCase, ProcessOrderUseCase>();
-    builder.Services.AddScoped<IPublishOutboxMessagesUseCase, PublishOutboxMessagesUseCase>();
-
-    builder.Services.AddScoped<IRiskAnalysisGateway, FakeRiskAnalysisGateway>();
+builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisSettings.ConnectionString));
+builder.Services.AddScoped<ICorrelationContext, CorrelationContext>();
+builder.Services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<OrderFlowDbContext>());
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IOutboxMessageRepository, OutboxMessageRepository>();
+builder.Services.AddScoped<IOrderAuditReadModelRepository, OrderAuditReadModelRepository>();
+builder.Services.AddScoped<IOrderCacheService, RedisOrderCacheService>();
+builder.Services.AddScoped<IProcessOrderUseCase, ProcessOrderUseCase>();
+builder.Services.AddScoped<IPublishOutboxMessagesUseCase, PublishOutboxMessagesUseCase>();
+builder.Services.AddScoped<IRiskAnalysisGateway, FakeRiskAnalysisGateway>();
+builder.Services.AddScoped<IBuyOrderService, BuyOrderService>();
+builder.Services.AddScoped<ISellOrderService, SellOrderService>();
+builder.Services.AddScoped<ITransferOrderService, TransferOrderService>();
+builder.Services.AddScoped<IOrderProcessingStrategy, BuyOrderProcessingStrategy>();
+builder.Services.AddScoped<IOrderProcessingStrategy, SellOrderProcessingStrategy>();
+builder.Services.AddScoped<IOrderProcessingStrategy, TransferOrderProcessingStrategy>();
+builder.Services.AddScoped<IOrderProcessingStrategyResolver, OrderProcessingStrategyResolver>();
+builder.Services.AddScoped<IOrderEventPublisher, KafkaOrderEventPublisher>();
 
 if (messagingSettings.Provider == MessagingProvider.Sqs)
-    {
-    Console.WriteLine($"Provider configurado: {messagingSettings.Provider}");
+{
     builder.Services.AddScoped<IIntegrationMessagePublisher, SqsIntegrationMessagePublisher>();
+}
+else
+{
+    builder.Services.AddScoped<IIntegrationMessagePublisher, RabbitMqIntegrationMessagePublisher>();
+}
+
+if (workerSettings.EnableOrderConsumer)
+{
+    if (messagingSettings.Provider == MessagingProvider.Sqs)
+    {
         builder.Services.AddHostedService<SqsWorker>();
     }
     else
     {
-    Console.WriteLine($"Provider configurado: {messagingSettings.Provider}");
-    builder.Services.AddScoped<IIntegrationMessagePublisher, RabbitMqIntegrationMessagePublisher>();
         builder.Services.AddHostedService<Worker>();
     }
+}
 
-    var redisSettings = builder.Configuration
-    .GetSection("Redis")
-    .Get<RedisSettings>() ?? new RedisSettings();
-
-    builder.Services.AddSingleton(redisSettings);
-
-    builder.Services.AddSingleton<IConnectionMultiplexer>(_ =>
-        ConnectionMultiplexer.Connect(redisSettings.ConnectionString));
-
-    builder.Services.AddScoped<IOrderCacheService, RedisOrderCacheService>();
-
+if (workerSettings.EnableOutboxPublisher)
+{
     builder.Services.AddHostedService<OutboxPublisherWorker>();
+}
 
-    builder.Services.AddScoped<IBuyOrderService, BuyOrderService>();
-    builder.Services.AddScoped<ISellOrderService, SellOrderService>();
-    builder.Services.AddScoped<ITransferOrderService, TransferOrderService>();
+if (workerSettings.EnableKafkaAudit)
+{
     builder.Services.AddHostedService<KafkaOrderStatusChangedAuditWorker>();
+}
 
-    builder.Services.AddScoped<IOrderProcessingStrategy, BuyOrderProcessingStrategy>();
-    builder.Services.AddScoped<IOrderProcessingStrategy, SellOrderProcessingStrategy>();
-    builder.Services.AddScoped<IOrderProcessingStrategy, TransferOrderProcessingStrategy>();
+var app = builder.Build();
 
-    builder.Services.AddScoped<IOrderProcessingStrategyResolver, OrderProcessingStrategyResolver>();
+await app.Services.GetRequiredService<IKafkaTopicInitializer>().InitializeAsync(app.Lifetime.ApplicationStopping);
 
-    builder.Services.AddScoped<IOrderEventPublisher, KafkaOrderEventPublisher>();
+app.MapPrometheusScrapingEndpoint();
+app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = x => x.Tags.Contains("live") });
+app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = x => x.Tags.Contains("ready") });
 
-    builder.Services.AddScoped<IOrderAuditReadModelRepository, OrderAuditReadModelRepository>();
-
-    var host = builder.Build();
-    host.Run();
+await app.RunAsync();
