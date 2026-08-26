@@ -118,39 +118,58 @@ jobs:
 
       - name: Set lowercase owner
         run: echo "IMAGE_OWNER=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
+             echo "BRANCH_TAG=${GITHUB_REF_NAME//\//-}" >> $GITHUB_ENV
 
       - name: Login to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Build and push API Docker image
         run: |
+          IMAGE="ghcr.io/${IMAGE_OWNER}/orderflow-api"
           docker build \
             -f OrderFlow.Api/Dockerfile \
-            -t ghcr.io/${IMAGE_OWNER}/orderflow-api:latest \
-            -t ghcr.io/${IMAGE_OWNER}/orderflow-api:${{ github.sha }} \
+            -t "${IMAGE}:${{ github.sha }}" \
+            -t "${IMAGE}:${BRANCH_TAG}" \
             .
 
-          docker push ghcr.io/${IMAGE_OWNER}/orderflow-api:latest
-          docker push ghcr.io/${IMAGE_OWNER}/orderflow-api:${{ github.sha }}
+          docker push "${IMAGE}:${{ github.sha }}"
+          docker push "${IMAGE}:${BRANCH_TAG}"
+
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+            docker tag "${IMAGE}:${{ github.sha }}" "${IMAGE}:latest"
+            docker push "${IMAGE}:latest"
+          fi
 
       - name: Build and push Worker Docker image
         run: |
+          IMAGE="ghcr.io/${IMAGE_OWNER}/orderflow-worker"
           docker build \
-            -f OrderFlow.Worker/Dockerfile \
-            -t ghcr.io/${IMAGE_OWNER}/orderflow-worker:latest \
-            -t ghcr.io/${IMAGE_OWNER}/orderflow-worker:${{ github.sha }} \
+            -f OrderFlow.Api/Dockerfile \
+            -t "${IMAGE}:${{ github.sha }}" \
+            -t "${IMAGE}:${BRANCH_TAG}" \
             .
 
-          docker push ghcr.io/${IMAGE_OWNER}/orderflow-worker:latest
-          docker push ghcr.io/${IMAGE_OWNER}/orderflow-worker:${{ github.sha }}
+          docker push "${IMAGE}:${{ github.sha }}"
+          docker push "${IMAGE}:${BRANCH_TAG}"
+
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+            docker tag "${IMAGE}:${{ github.sha }}" "${IMAGE}:latest"
+            docker push "${IMAGE}:latest"
+          fi
 
       - name: Build and push gRPC Docker image
         run: |
+          IMAGE="ghcr.io/${IMAGE_OWNER}/orderflow-grpc"
           docker build \
-            -f OrderFlow.Grpc/Dockerfile \
-            -t ghcr.io/${IMAGE_OWNER}/orderflow-grpc:latest \
-            -t ghcr.io/${IMAGE_OWNER}/orderflow-grpc:${{ github.sha }} \
+            -f OrderFlow.Api/Dockerfile \
+            -t "${IMAGE}:${{ github.sha }}" \
+            -t "${IMAGE}:${BRANCH_TAG}" \
             .
 
-          docker push ghcr.io/${IMAGE_OWNER}/orderflow-grpc:latest
-          docker push ghcr.io/${IMAGE_OWNER}/orderflow-grpc:${{ github.sha }}
+          docker push "${IMAGE}:${{ github.sha }}"
+          docker push "${IMAGE}:${BRANCH_TAG}"
+
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+            docker tag "${IMAGE}:${{ github.sha }}" "${IMAGE}:latest"
+            docker push "${IMAGE}:latest"
+          fi
