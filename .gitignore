@@ -506,4 +506,13 @@ obj/
 *.log
 *.tmp
 *.cache
+
+# Terraform local state and cache
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfplan
+
 >>>>>>> feature/cloud-aws-sqs
