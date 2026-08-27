@@ -111,6 +111,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
 
     steps:
       - name: Checkout repository
@@ -129,59 +130,106 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.2.3
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          role-session-name: OrderFlow-${{ github.run_id }}
+          aws-region: ${{ vars.AWS_REGION }}
+          allowed-account-ids: ${{ vars.AWS_ACCOUNT_ID }}
+          mask-aws-account-id: true
+
+      - name: Validate AWS identity
+        shell: bash
+        run: aws sts get-caller-identity
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
       - name: Build and push API Docker image
         shell: bash
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
-          IMAGE="ghcr.io/${IMAGE_OWNER}/orderflow-api"
+          GHCR_IMAGE="ghcr.io/${IMAGE_OWNER}/orderflow-api"
+          ECR_IMAGE="${ECR_REGISTRY}/orderflow-api"
 
           docker build \
             -f OrderFlow.Api/Dockerfile \
-            -t "${IMAGE}:${{ github.sha }}" \
-            -t "${IMAGE}:${BRANCH_TAG}" \
+            -t "${GHCR_IMAGE}:${{ github.sha }}" \
+            -t "${GHCR_IMAGE}:${BRANCH_TAG}" \
+            -t "${ECR_IMAGE}:${{ github.sha }}" \
+            -t "${ECR_IMAGE}:${BRANCH_TAG}" \
             .
 
-          docker push "${IMAGE}:${{ github.sha }}"
-          docker push "${IMAGE}:${BRANCH_TAG}"
+          docker push "${GHCR_IMAGE}:${{ github.sha }}"
+          docker push "${GHCR_IMAGE}:${BRANCH_TAG}"
+          docker push "${ECR_IMAGE}:${{ github.sha }}"
+          docker push "${ECR_IMAGE}:${BRANCH_TAG}"
 
           if [ "${GITHUB_REF_NAME}" = "main" ]; then
-            docker tag "${IMAGE}:${{ github.sha }}" "${IMAGE}:latest"
-            docker push "${IMAGE}:latest"
+            docker tag "${GHCR_IMAGE}:${{ github.sha }}" "${GHCR_IMAGE}:latest"
+            docker tag "${ECR_IMAGE}:${{ github.sha }}" "${ECR_IMAGE}:latest"
+
+            docker push "${GHCR_IMAGE}:latest"
+            docker push "${ECR_IMAGE}:latest"
           fi
 
       - name: Build and push Worker Docker image
         shell: bash
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
-          IMAGE="ghcr.io/${IMAGE_OWNER}/orderflow-worker"
+          GHCR_IMAGE="ghcr.io/${IMAGE_OWNER}/orderflow-worker"
+          ECR_IMAGE="${ECR_REGISTRY}/orderflow-worker"
 
           docker build \
             -f OrderFlow.Worker/Dockerfile \
-            -t "${IMAGE}:${{ github.sha }}" \
-            -t "${IMAGE}:${BRANCH_TAG}" \
+            -t "${GHCR_IMAGE}:${{ github.sha }}" \
+            -t "${GHCR_IMAGE}:${BRANCH_TAG}" \
+            -t "${ECR_IMAGE}:${{ github.sha }}" \
+            -t "${ECR_IMAGE}:${BRANCH_TAG}" \
             .
 
-          docker push "${IMAGE}:${{ github.sha }}"
-          docker push "${IMAGE}:${BRANCH_TAG}"
+          docker push "${GHCR_IMAGE}:${{ github.sha }}"
+          docker push "${GHCR_IMAGE}:${BRANCH_TAG}"
+          docker push "${ECR_IMAGE}:${{ github.sha }}"
+          docker push "${ECR_IMAGE}:${BRANCH_TAG}"
 
           if [ "${GITHUB_REF_NAME}" = "main" ]; then
-            docker tag "${IMAGE}:${{ github.sha }}" "${IMAGE}:latest"
-            docker push "${IMAGE}:latest"
+            docker tag "${GHCR_IMAGE}:${{ github.sha }}" "${GHCR_IMAGE}:latest"
+            docker tag "${ECR_IMAGE}:${{ github.sha }}" "${ECR_IMAGE}:latest"
+
+            docker push "${GHCR_IMAGE}:latest"
+            docker push "${ECR_IMAGE}:latest"
           fi
 
       - name: Build and push gRPC Docker image
         shell: bash
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
-          IMAGE="ghcr.io/${IMAGE_OWNER}/orderflow-grpc"
+          GHCR_IMAGE="ghcr.io/${IMAGE_OWNER}/orderflow-grpc"
+          ECR_IMAGE="${ECR_REGISTRY}/orderflow-grpc"
 
           docker build \
             -f OrderFlow.Grpc/Dockerfile \
-            -t "${IMAGE}:${{ github.sha }}" \
-            -t "${IMAGE}:${BRANCH_TAG}" \
+            -t "${GHCR_IMAGE}:${{ github.sha }}" \
+            -t "${GHCR_IMAGE}:${BRANCH_TAG}" \
+            -t "${ECR_IMAGE}:${{ github.sha }}" \
+            -t "${ECR_IMAGE}:${BRANCH_TAG}" \
             .
 
-          docker push "${IMAGE}:${{ github.sha }}"
-          docker push "${IMAGE}:${BRANCH_TAG}"
+          docker push "${GHCR_IMAGE}:${{ github.sha }}"
+          docker push "${GHCR_IMAGE}:${BRANCH_TAG}"
+          docker push "${ECR_IMAGE}:${{ github.sha }}"
+          docker push "${ECR_IMAGE}:${BRANCH_TAG}"
 
           if [ "${GITHUB_REF_NAME}" = "main" ]; then
-            docker tag "${IMAGE}:${{ github.sha }}" "${IMAGE}:latest"
-            docker push "${IMAGE}:latest"
+            docker tag "${GHCR_IMAGE}:${{ github.sha }}" "${GHCR_IMAGE}:latest"
+            docker tag "${ECR_IMAGE}:${{ github.sha }}" "${ECR_IMAGE}:latest"
+
+            docker push "${GHCR_IMAGE}:latest"
+            docker push "${ECR_IMAGE}:latest"
           fi
