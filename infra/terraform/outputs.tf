@@ -16,3 +16,8 @@ output "ecr_repository_urls" {
     name => repository.repository_url
   }
 }
+
+output "terraform_plan_role_arn" {
+  description = "IAM Role assumed by GitHub Actions to run Terraform plan"
+  value       = aws_iam_role.terraform_plan.arn
+}
