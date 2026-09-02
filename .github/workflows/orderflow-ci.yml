@@ -233,3 +233,51 @@ jobs:
             docker push "${GHCR_IMAGE}:latest"
             docker push "${ECR_IMAGE}:latest"
           fi
+  terraform-check:
+    name: Terraform check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event_name != 'pull_request'
+
+    permissions:
+      contents: read
+      id-token: write
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: infra/terraform
+
+    env:
+      TF_IN_AUTOMATION: "true"
+      TF_INPUT: "false"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.15.8"
+
+      - name: Check Terraform formatting
+        run: terraform fmt -check
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.2.3
+        with:
+          role-to-assume: ${{ vars.AWS_TERRAFORM_PLAN_ROLE_ARN }}
+          role-session-name: OrderFlow-Terraform-${{ github.run_id }}
+          aws-region: ${{ vars.AWS_REGION }}
+          allowed-account-ids: ${{ vars.AWS_ACCOUNT_ID }}
+          mask-aws-account-id: true
+
+      - name: Initialize Terraform
+        run: terraform init -input=false -no-color
+
+      - name: Validate Terraform
+        run: terraform validate -no-color
+
+      - name: Plan Terraform
+        run: terraform plan -input=false -no-color -lock-timeout=120s

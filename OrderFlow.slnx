@@ -1,7 +1,10 @@
 <Solution>
   <Folder Name="/Itens de Solução/">
     <File Path="docker-compose.yml" />
+    <File Path="infra/terraform/backend.tf" />
     <File Path="infra/terraform/ecr.tf" />
+    <File Path="infra/terraform/environments/dev.s3.tfbackend" />
+    <File Path="infra/terraform/iam.tf" />
     <File Path="infra/terraform/imports.tf" />
     <File Path="infra/terraform/outputs.tf" />
     <File Path="infra/terraform/providers.tf" />
