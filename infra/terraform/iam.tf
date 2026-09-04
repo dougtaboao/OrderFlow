@@ -214,6 +214,17 @@ data "aws_iam_policy_document" "terraform_plan" {
   }
 
   statement {
+    sid    = "ListGitHubOidcProviders"
+    effect = "Allow"
+
+    actions = [
+      "iam:ListOpenIDConnectProviders"
+    ]
+
+    resources = ["*"]
+  }
+
+  statement {
     sid    = "ReadGitHubOidcProvider"
     effect = "Allow"
 
