@@ -101,3 +101,23 @@ resource "aws_route_table_association" "public" {
   subnet_id      = each.value.id
   route_table_id = aws_route_table.public.id
 }
+
+resource "aws_route_table" "private" {
+  vpc_id = aws_vpc.main.id
+
+  tags = merge(local.common_tags, {
+    Name = "orderflow-${var.environment}-private-rt"
+    Tier = "Private"
+  })
+}
+
+resource "aws_route_table_association" "private" {
+  for_each = {
+    for key, subnet in aws_subnet.main :
+    key => subnet
+    if startswith(key, "private")
+  }
+
+  subnet_id      = each.value.id
+  route_table_id = aws_route_table.private.id
+}
