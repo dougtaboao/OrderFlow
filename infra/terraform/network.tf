@@ -67,3 +67,37 @@ resource "aws_subnet" "main" {
     Tier = each.value.public ? "Public" : "Private"
   })
 }
+
+resource "aws_internet_gateway" "main" {
+  vpc_id = aws_vpc.main.id
+
+  tags = merge(local.common_tags, {
+    Name = "orderflow-${var.environment}-igw"
+  })
+}
+
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.main.id
+
+  tags = merge(local.common_tags, {
+    Name = "orderflow-${var.environment}-public-rt"
+    Tier = "Public"
+  })
+}
+
+resource "aws_route" "public_internet" {
+  route_table_id         = aws_route_table.public.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.main.id
+}
+
+resource "aws_route_table_association" "public" {
+  for_each = {
+    for key, subnet in aws_subnet.main :
+    key => subnet
+    if startswith(key, "public")
+  }
+
+  subnet_id      = each.value.id
+  route_table_id = aws_route_table.public.id
+}
