@@ -16,3 +16,54 @@ resource "aws_vpc" "main" {
     Name = "orderflow-${var.environment}-vpc"
   })
 }
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "zone-type"
+    values = ["availability-zone"]
+  }
+}
+
+locals {
+  subnets = {
+    public_a = {
+      cidr_block        = cidrsubnet(var.vpc_cidr, 8, 0)
+      availability_zone = data.aws_availability_zones.available.names[0]
+      public            = true
+    }
+
+    public_b = {
+      cidr_block        = cidrsubnet(var.vpc_cidr, 8, 1)
+      availability_zone = data.aws_availability_zones.available.names[1]
+      public            = true
+    }
+
+    private_a = {
+      cidr_block        = cidrsubnet(var.vpc_cidr, 8, 10)
+      availability_zone = data.aws_availability_zones.available.names[0]
+      public            = false
+    }
+
+    private_b = {
+      cidr_block        = cidrsubnet(var.vpc_cidr, 8, 11)
+      availability_zone = data.aws_availability_zones.available.names[1]
+      public            = false
+    }
+  }
+}
+
+resource "aws_subnet" "main" {
+  for_each = local.subnets
+
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = each.value.cidr_block
+  availability_zone       = each.value.availability_zone
+  map_public_ip_on_launch = each.value.public
+
+  tags = merge(local.common_tags, {
+    Name = "orderflow-${var.environment}-${replace(each.key, "_", "-")}-subnet"
+    Tier = each.value.public ? "Public" : "Private"
+  })
+}

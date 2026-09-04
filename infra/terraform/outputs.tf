@@ -31,3 +31,19 @@ output "vpc_cidr_block" {
   description = "IPv4 CIDR block of the OrderFlow VPC"
   value       = aws_vpc.main.cidr_block
 }
+
+output "public_subnet_ids" {
+  description = "IDs of the public subnets"
+  value = [
+    for key, subnet in aws_subnet.main :
+    subnet.id if startswith(key, "public")
+  ]
+}
+
+output "private_subnet_ids" {
+  description = "IDs of the private subnets"
+  value = [
+    for key, subnet in aws_subnet.main :
+    subnet.id if startswith(key, "private")
+  ]
+}

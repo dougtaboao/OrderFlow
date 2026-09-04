@@ -260,6 +260,8 @@ data "aws_iam_policy_document" "terraform_plan" {
     effect = "Allow"
 
     actions = [
+      "ec2:DescribeAvailabilityZones",
+      "ec2:DescribeSubnets",
       "ec2:DescribeTags",
       "ec2:DescribeVpcAttribute",
       "ec2:DescribeVpcs"
