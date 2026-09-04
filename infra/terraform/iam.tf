@@ -253,6 +253,20 @@ data "aws_iam_policy_document" "terraform_plan" {
       aws_iam_role.terraform_plan.arn
     ]
   }
+
+  statement {
+    sid = "ReadOrderFlowVpc"
+
+    effect = "Allow"
+
+    actions = [
+      "ec2:DescribeTags",
+      "ec2:DescribeVpcAttribute",
+      "ec2:DescribeVpcs"
+    ]
+
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_role_policy" "terraform_plan" {

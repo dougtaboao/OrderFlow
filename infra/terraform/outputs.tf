@@ -18,6 +18,16 @@ output "ecr_repository_urls" {
 }
 
 output "terraform_plan_role_arn" {
-  description = "IAM Role assumed by GitHub Actions to run Terraform plan"
+  description = "IAM Role assumed by GitHub Actions to run Terraform plan "
   value       = aws_iam_role.terraform_plan.arn
+}
+
+output "vpc_id" {
+  description = "ID of the OrderFlow VPC"
+  value       = aws_vpc.main.id
+}
+
+output "vpc_cidr_block" {
+  description = "IPv4 CIDR block of the OrderFlow VPC"
+  value       = aws_vpc.main.cidr_block
 }
