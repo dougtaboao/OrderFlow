@@ -62,3 +62,14 @@ output "private_route_table_id" {
   description = "ID of the private route table"
   value       = aws_route_table.private.id
 }
+
+output "security_group_ids" {
+  description = "Security Group IDs used by OrderFlow components"
+
+  value = {
+    alb    = aws_security_group.alb.id
+    api    = aws_security_group.api.id
+    grpc   = aws_security_group.grpc.id
+    worker = aws_security_group.worker.id
+  }
+}

@@ -263,6 +263,8 @@ data "aws_iam_policy_document" "terraform_plan" {
       "ec2:DescribeAvailabilityZones",
       "ec2:DescribeInternetGateways",
       "ec2:DescribeRouteTables",
+      "ec2:DescribeSecurityGroupRules",
+      "ec2:DescribeSecurityGroups",
       "ec2:DescribeSubnets",
       "ec2:DescribeTags",
       "ec2:DescribeVpcAttribute",
