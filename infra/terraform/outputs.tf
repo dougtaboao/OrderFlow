@@ -102,3 +102,15 @@ output "ecs_task_role_arn" {
   description = "IAM role assumed by the OrderFlow containers"
   value       = aws_iam_role.ecs_task.arn
 }
+
+output "ecs_task_definitions" {
+  description = "OrderFlow ECS task definition families and ARNs"
+
+  value = {
+    for component, task_definition in aws_ecs_task_definition.orderflow :
+    component => {
+      family = task_definition.family
+      arn    = task_definition.arn
+    }
+  }
+}

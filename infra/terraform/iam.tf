@@ -283,6 +283,8 @@ data "aws_iam_policy_document" "terraform_plan" {
 
     actions = [
       "ecs:DescribeClusters",
+      "ecs:DescribeTaskDefinition",
+      "ecs:ListTaskDefinitions",
       "ecs:ListTagsForResource"
     ]
 
