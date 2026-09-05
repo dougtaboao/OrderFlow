@@ -250,7 +250,9 @@ data "aws_iam_policy_document" "terraform_plan" {
 
     resources = [
       aws_iam_role.github_actions_ecr.arn,
-      aws_iam_role.terraform_plan.arn
+      aws_iam_role.terraform_plan.arn,
+      aws_iam_role.ecs_task_execution.arn,
+      aws_iam_role.ecs_task.arn
     ]
   }
 

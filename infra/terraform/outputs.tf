@@ -92,3 +92,13 @@ output "ecs_log_group_names" {
     component => log_group.name
   }
 }
+
+output "ecs_task_execution_role_arn" {
+  description = "IAM role used by ECS to pull images and publish logs"
+  value       = aws_iam_role.ecs_task_execution.arn
+}
+
+output "ecs_task_role_arn" {
+  description = "IAM role assumed by the OrderFlow containers"
+  value       = aws_iam_role.ecs_task.arn
+}
