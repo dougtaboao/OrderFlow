@@ -73,3 +73,22 @@ output "security_group_ids" {
     worker = aws_security_group.worker.id
   }
 }
+
+output "ecs_cluster" {
+  description = "OrderFlow ECS cluster information"
+
+  value = {
+    id   = aws_ecs_cluster.main.id
+    arn  = aws_ecs_cluster.main.arn
+    name = aws_ecs_cluster.main.name
+  }
+}
+
+output "ecs_log_group_names" {
+  description = "CloudWatch Log Groups used by OrderFlow ECS tasks"
+
+  value = {
+    for component, log_group in aws_cloudwatch_log_group.ecs :
+    component => log_group.name
+  }
+}

@@ -273,6 +273,32 @@ data "aws_iam_policy_document" "terraform_plan" {
 
     resources = ["*"]
   }
+
+  statement {
+    sid = "ReadOrderFlowEcs"
+
+    effect = "Allow"
+
+    actions = [
+      "ecs:DescribeClusters",
+      "ecs:ListTagsForResource"
+    ]
+
+    resources = ["*"]
+  }
+
+  statement {
+    sid = "ReadOrderFlowLogGroups"
+
+    effect = "Allow"
+
+    actions = [
+      "logs:DescribeLogGroups",
+      "logs:ListTagsForResource"
+    ]
+
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_role_policy" "terraform_plan" {
