@@ -5,6 +5,7 @@ locals {
       cpu             = 256
       memory          = 512
       expose_port     = true
+      environment     = []
     }
 
     grpc = {
@@ -12,6 +13,7 @@ locals {
       cpu             = 256
       memory          = 512
       expose_port     = true
+      environment     = []
     }
 
     worker = {
@@ -19,6 +21,65 @@ locals {
       cpu             = 256
       memory          = 512
       expose_port     = false
+
+      environment = [
+        {
+          name  = "Workers__EnableOrderConsumer"
+          value = "true"
+        },
+        {
+          name  = "Workers__EnableOutboxPublisher"
+          value = "false"
+        },
+        {
+          name  = "Workers__EnableKafkaAudit"
+          value = "false"
+        }
+      ]
+    }
+
+    outbox = {
+      repository_name = "orderflow-worker"
+      cpu             = 256
+      memory          = 512
+      expose_port     = false
+
+      environment = [
+        {
+          name  = "Workers__EnableOrderConsumer"
+          value = "false"
+        },
+        {
+          name  = "Workers__EnableOutboxPublisher"
+          value = "true"
+        },
+        {
+          name  = "Workers__EnableKafkaAudit"
+          value = "false"
+        }
+      ]
+    }
+
+    kafka-audit = {
+      repository_name = "orderflow-worker"
+      cpu             = 256
+      memory          = 512
+      expose_port     = false
+
+      environment = [
+        {
+          name  = "Workers__EnableOrderConsumer"
+          value = "false"
+        },
+        {
+          name  = "Workers__EnableOutboxPublisher"
+          value = "false"
+        },
+        {
+          name  = "Workers__EnableKafkaAudit"
+          value = "true"
+        }
+      ]
     }
   }
 }
@@ -62,16 +123,19 @@ resource "aws_ecs_task_definition" "orderflow" {
         }
       ] : []
 
-      environment = [
-        {
-          name  = "DOTNET_ENVIRONMENT"
-          value = "Production"
-        },
-        {
-          name  = "ASPNETCORE_URLS"
-          value = "http://+:8080"
-        }
-      ]
+      environment = concat(
+        [
+          {
+            name  = "DOTNET_ENVIRONMENT"
+            value = "Production"
+          },
+          {
+            name  = "ASPNETCORE_URLS"
+            value = "http://+:8080"
+          }
+        ],
+        each.value.environment
+      )
 
       logConfiguration = {
         logDriver = "awslogs"

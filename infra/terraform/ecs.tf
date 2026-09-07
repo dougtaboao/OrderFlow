@@ -15,7 +15,9 @@ locals {
   ecs_log_groups = toset([
     "api",
     "grpc",
-    "worker"
+    "worker",
+    "outbox",
+    "kafka-audit"
   ])
 }
 

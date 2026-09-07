@@ -283,7 +283,9 @@ data "aws_iam_policy_document" "terraform_plan" {
 
     actions = [
       "ecs:DescribeClusters",
+      "ecs:DescribeServices",
       "ecs:DescribeTaskDefinition",
+      "ecs:ListServices",
       "ecs:ListTaskDefinitions",
       "ecs:ListTagsForResource"
     ]
@@ -299,6 +301,23 @@ data "aws_iam_policy_document" "terraform_plan" {
     actions = [
       "logs:DescribeLogGroups",
       "logs:ListTagsForResource"
+    ]
+
+    resources = ["*"]
+  }
+
+  statement {
+
+    sid    = "ReadOrderFlowLoadBalancers"
+    effect = "Allow"
+
+    actions = [
+      "elasticloadbalancing:DescribeListeners",
+      "elasticloadbalancing:DescribeLoadBalancers",
+      "elasticloadbalancing:DescribeRules",
+      "elasticloadbalancing:DescribeTags",
+      "elasticloadbalancing:DescribeTargetGroups",
+      "elasticloadbalancing:DescribeTargetHealth"
     ]
 
     resources = ["*"]

@@ -114,3 +114,25 @@ output "ecs_task_definitions" {
     }
   }
 }
+
+output "ecs_services" {
+  description = "OrderFlow ECS service names"
+
+  value = {
+    for component, service in aws_ecs_service.orderflow :
+    component => {
+      name          = service.name
+      desired_count = service.desired_count
+    }
+  }
+}
+
+output "runtime_enabled" {
+  description = "Indicates whether hourly runtime resources are enabled"
+  value       = var.deploy_runtime
+}
+
+output "api_load_balancer_dns_name" {
+  description = "Public DNS name of the OrderFlow API load balancer"
+  value       = try(aws_lb.main[0].dns_name, null)
+}

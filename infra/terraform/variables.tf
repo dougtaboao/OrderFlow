@@ -38,3 +38,9 @@ variable "vpc_cidr" {
     error_message = "vpc_cidr must be a valid IPv4 CIDR block."
   }
 }
+
+variable "deploy_runtime" {
+  description = "Controls creation of runtime resources that generate hourly costs"
+  type        = bool
+  default     = false
+}
