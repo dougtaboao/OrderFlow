@@ -322,6 +322,21 @@ data "aws_iam_policy_document" "terraform_plan" {
 
     resources = ["*"]
   }
+
+  statement {
+    sid    = "ReadOrderFlowSqs"
+    effect = "Allow"
+
+    actions = [
+      "sqs:GetQueueAttributes",
+      "sqs:GetQueueUrl",
+      "sqs:ListQueueTags",
+      "sqs:ListQueues"
+    ]
+
+    resources = ["*"]
+  }
+
 }
 
 resource "aws_iam_role_policy" "terraform_plan" {

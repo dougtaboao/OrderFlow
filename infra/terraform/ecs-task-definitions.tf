@@ -5,7 +5,45 @@ locals {
       cpu             = 256
       memory          = 512
       expose_port     = true
-      environment     = []
+      environment = [
+        {
+          name  = "Jwt__Issuer"
+          value = "OrderFlow"
+        },
+        {
+          name  = "Jwt__Audience"
+          value = "OrderFlow.Api"
+        },
+        {
+          name  = "RabbitMq__QueueName"
+          value = "order-created"
+        },
+        {
+          name  = "RabbitMq__DeadLetterQueueName"
+          value = "order-created-dlq"
+        },
+        {
+          name  = "RabbitMq__MaxRetryCount"
+          value = "3"
+        },
+        {
+          name  = "Kafka__OrderCompletedTopic"
+          value = "order-completed"
+        },
+        {
+          name  = "Kafka__OrderStatusChangedTopic"
+          value = "order-status-changed"
+        },
+        {
+          name  = "Redis__OrderCacheExpirationMinutes"
+          value = "5"
+        }
+      ]
+      secure_parameters = [
+        "database",
+        "jwt",
+        "redis"
+      ]
     }
 
     grpc = {
@@ -13,7 +51,20 @@ locals {
       cpu             = 256
       memory          = 512
       expose_port     = true
-      environment     = []
+      environment = [
+        {
+          name  = "Kafka__OrderCompletedTopic"
+          value = "order-completed"
+        },
+        {
+          name  = "Redis__OrderCacheExpirationMinutes"
+          value = "5"
+        }
+      ]
+      secure_parameters = [
+        "database",
+        "redis"
+      ]
     }
 
     worker = {
@@ -21,6 +72,10 @@ locals {
       cpu             = 256
       memory          = 512
       expose_port     = false
+      secure_parameters = [
+        "database",
+        "redis"
+      ]
 
       environment = [
         {
@@ -34,6 +89,46 @@ locals {
         {
           name  = "Workers__EnableKafkaAudit"
           value = "false"
+        },
+        {
+          name  = "Messaging__Provider"
+          value = "Sqs"
+        },
+        {
+          name  = "Sqs__Enabled"
+          value = "true"
+        },
+        {
+          name  = "Sqs__Region"
+          value = var.aws_region
+        },
+        {
+          name  = "Sqs__QueueUrl"
+          value = aws_sqs_queue.order_created.url
+        },
+        {
+          name  = "Sqs__DeadLetterQueueUrl"
+          value = aws_sqs_queue.order_created_dlq.url
+        },
+        {
+          name  = "Sqs__MaxMessages"
+          value = "5"
+        },
+        {
+          name  = "Sqs__WaitTimeSeconds"
+          value = "10"
+        },
+        {
+          name  = "Kafka__OrderCompletedTopic"
+          value = "order-completed"
+        },
+        {
+          name  = "Kafka__OrderStatusChangedTopic"
+          value = "order-status-changed"
+        },
+        {
+          name  = "Redis__OrderCacheExpirationMinutes"
+          value = "5"
         }
       ]
     }
@@ -43,6 +138,10 @@ locals {
       cpu             = 256
       memory          = 512
       expose_port     = false
+      secure_parameters = [
+        "database",
+        "redis"
+      ]
 
       environment = [
         {
@@ -56,6 +155,46 @@ locals {
         {
           name  = "Workers__EnableKafkaAudit"
           value = "false"
+        },
+        {
+          name  = "Messaging__Provider"
+          value = "Sqs"
+        },
+        {
+          name  = "Sqs__Enabled"
+          value = "true"
+        },
+        {
+          name  = "Sqs__Region"
+          value = var.aws_region
+        },
+        {
+          name  = "Sqs__QueueUrl"
+          value = aws_sqs_queue.order_created.url
+        },
+        {
+          name  = "Sqs__DeadLetterQueueUrl"
+          value = aws_sqs_queue.order_created_dlq.url
+        },
+        {
+          name  = "Sqs__MaxMessages"
+          value = "5"
+        },
+        {
+          name  = "Sqs__WaitTimeSeconds"
+          value = "10"
+        },
+        {
+          name  = "Kafka__OrderCompletedTopic"
+          value = "order-completed"
+        },
+        {
+          name  = "Kafka__OrderStatusChangedTopic"
+          value = "order-status-changed"
+        },
+        {
+          name  = "Redis__OrderCacheExpirationMinutes"
+          value = "5"
         }
       ]
     }
@@ -65,6 +204,10 @@ locals {
       cpu             = 256
       memory          = 512
       expose_port     = false
+      secure_parameters = [
+        "database",
+        "redis"
+      ]
 
       environment = [
         {
@@ -78,6 +221,46 @@ locals {
         {
           name  = "Workers__EnableKafkaAudit"
           value = "true"
+        },
+        {
+          name  = "Messaging__Provider"
+          value = "Sqs"
+        },
+        {
+          name  = "Sqs__Enabled"
+          value = "true"
+        },
+        {
+          name  = "Sqs__Region"
+          value = var.aws_region
+        },
+        {
+          name  = "Sqs__QueueUrl"
+          value = aws_sqs_queue.order_created.url
+        },
+        {
+          name  = "Sqs__DeadLetterQueueUrl"
+          value = aws_sqs_queue.order_created_dlq.url
+        },
+        {
+          name  = "Sqs__MaxMessages"
+          value = "5"
+        },
+        {
+          name  = "Sqs__WaitTimeSeconds"
+          value = "10"
+        },
+        {
+          name  = "Kafka__OrderCompletedTopic"
+          value = "order-completed"
+        },
+        {
+          name  = "Kafka__OrderStatusChangedTopic"
+          value = "order-status-changed"
+        },
+        {
+          name  = "Redis__OrderCacheExpirationMinutes"
+          value = "5"
         }
       ]
     }
@@ -137,6 +320,13 @@ resource "aws_ecs_task_definition" "orderflow" {
         each.value.environment
       )
 
+      secrets = [
+        for parameter_key in each.value.secure_parameters : {
+          name      = local.ecs_secure_parameters[parameter_key].environment_name
+          valueFrom = local.ecs_secure_parameter_arns[parameter_key]
+        }
+      ]
+
       logConfiguration = {
         logDriver = "awslogs"
 
@@ -150,7 +340,8 @@ resource "aws_ecs_task_definition" "orderflow" {
   ])
 
   depends_on = [
-    aws_iam_role_policy_attachment.ecs_task_execution
+    aws_iam_role_policy_attachment.ecs_task_execution,
+    aws_iam_role_policy.ecs_execution_parameters
   ]
 
   tags = merge(local.common_tags, {

@@ -136,3 +136,32 @@ output "api_load_balancer_dns_name" {
   description = "Public DNS name of the OrderFlow API load balancer"
   value       = try(aws_lb.main[0].dns_name, null)
 }
+
+output "sqs_order_created" {
+  description = "Order-created SQS queue information"
+
+  value = {
+    name = aws_sqs_queue.order_created.name
+    arn  = aws_sqs_queue.order_created.arn
+    url  = aws_sqs_queue.order_created.url
+  }
+}
+
+output "sqs_order_created_dlq" {
+  description = "Order-created dead-letter queue information"
+
+  value = {
+    name = aws_sqs_queue.order_created_dlq.name
+    arn  = aws_sqs_queue.order_created_dlq.arn
+    url  = aws_sqs_queue.order_created_dlq.url
+  }
+}
+
+output "secure_parameter_names" {
+  description = "Names of secure parameters that must be populated outside Terraform"
+
+  value = {
+    for key, parameter in local.ecs_secure_parameters :
+    key => parameter.path
+  }
+}
