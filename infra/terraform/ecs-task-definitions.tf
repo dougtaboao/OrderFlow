@@ -35,6 +35,10 @@ locals {
           value = "order-status-changed"
         },
         {
+          name  = "Hosting__DisableHttpsRedirection"
+          value = "true"
+        },
+        {
           name  = "Redis__OrderCacheExpirationMinutes"
           value = "5"
         }
@@ -293,7 +297,7 @@ resource "aws_ecs_task_definition" "orderflow" {
     {
       name = each.key
 
-      image = "${aws_ecr_repository.orderflow[each.value.repository_name].repository_url}:latest"
+      image = "${aws_ecr_repository.orderflow[each.value.repository_name].repository_url}:${var.orderflow_image_tag}"
 
       essential = true
 

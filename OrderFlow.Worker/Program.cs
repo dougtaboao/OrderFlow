@@ -25,7 +25,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog((context, configuration) => configuration
     .ReadFrom.Configuration(context.Configuration)
     .Enrich.FromLogContext()
-    //.WriteTo.Console()
+    .WriteTo.Console()
     .WriteTo.File("logs/orderflow-worker-.log", rollingInterval: RollingInterval.Day));
 
 builder.Services.AddDbContext<OrderFlowDbContext>(options =>
@@ -37,6 +37,7 @@ var workerSettings = builder.Configuration.GetSection("Workers").Get<WorkerSetti
 var sqsSettings = builder.Configuration.GetSection("Sqs").Get<SqsSettings>() ?? new();
 var kafkaSettings = builder.Configuration.GetSection("Kafka").Get<KafkaSettings>() ?? new();
 var redisSettings = builder.Configuration.GetSection("Redis").Get<RedisSettings>() ?? new();
+var usesKafka = workerSettings.EnableOrderConsumer || workerSettings.EnableKafkaAudit;
 
 builder.Services.Configure<KafkaOptions>(builder.Configuration.GetSection(KafkaOptions.SectionName));
 builder.Services.AddSingleton<IKafkaTopicInitializer, KafkaTopicInitializer>();
@@ -61,11 +62,31 @@ builder.Services.AddOpenTelemetry()
         if (!string.IsNullOrWhiteSpace(otlpEndpoint)) metrics.AddOtlpExporter(o => o.Endpoint = new Uri(otlpEndpoint));
     });
 
-builder.Services.AddHealthChecks()
+//// Comentado para aws
+//builder.Services.AddHealthChecks()
+//    .AddCheck("self", () => HealthCheckResult.Healthy(), tags: ["live"])
+//    .AddDbContextCheck<OrderFlowDbContext>("sqlserver", tags: ["ready"])
+//    .AddCheck<RabbitMqHealthCheck>("rabbitmq", tags: ["ready"])
+//    .AddCheck<KafkaHealthCheck>("kafka", tags: ["ready"]);
+
+var healthChecks = builder.Services
+    .AddHealthChecks()
     .AddCheck("self", () => HealthCheckResult.Healthy(), tags: ["live"])
-    .AddDbContextCheck<OrderFlowDbContext>("sqlserver", tags: ["ready"])
-    .AddCheck<RabbitMqHealthCheck>("rabbitmq", tags: ["ready"])
-    .AddCheck<KafkaHealthCheck>("kafka", tags: ["ready"]);
+    .AddDbContextCheck<OrderFlowDbContext>("sqlserver", tags: ["ready"]);
+
+if (messagingSettings.Provider == MessagingProvider.RabbitMq)
+{
+    healthChecks.AddCheck<RabbitMqHealthCheck>(
+        "rabbitmq",
+        tags: ["ready"]);
+}
+
+if (usesKafka)
+{
+    healthChecks.AddCheck<KafkaHealthCheck>(
+        "kafka",
+        tags: ["ready"]);
+}
 
 builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisSettings.ConnectionString));
 builder.Services.AddScoped<ICorrelationContext, CorrelationContext>();
@@ -119,7 +140,15 @@ if (workerSettings.EnableKafkaAudit)
 
 var app = builder.Build();
 
-await app.Services.GetRequiredService<IKafkaTopicInitializer>().InitializeAsync(app.Lifetime.ApplicationStopping);
+//// Comentado para aws
+// await app.Services.GetRequiredService<IKafkaTopicInitializer>().InitializeAsync(app.Lifetime.ApplicationStopping);
+
+if (usesKafka)
+{
+    await app.Services
+        .GetRequiredService<IKafkaTopicInitializer>()
+        .InitializeAsync(app.Lifetime.ApplicationStopping);
+}
 
 app.MapPrometheusScrapingEndpoint();
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = x => x.Tags.Contains("live") });

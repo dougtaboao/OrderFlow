@@ -44,3 +44,9 @@ variable "deploy_runtime" {
   type        = bool
   default     = false
 }
+
+variable "orderflow_image_tag" {
+  description = "Docker image tag deployed by the OrderFlow ECS services"
+  type        = string
+  default     = "feature-cloud-readiness"
+}

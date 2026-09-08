@@ -164,9 +164,10 @@ builder.Services.AddDbContext<OrderFlowDbContext>(options =>
 builder.Services
     .AddHealthChecks()
     .AddCheck("self", () => HealthCheckResult.Healthy(), tags: new[] { "live" })
-    .AddDbContextCheck<OrderFlowDbContext>("sqlserver", tags: new[] { "ready" })
-    .AddCheck<RabbitMqHealthCheck>("rabbitmq", tags: new[] { "ready" })
-    .AddCheck<KafkaHealthCheck>("kafka", tags: new[] { "ready" });
+    .AddDbContextCheck<OrderFlowDbContext>("sqlserver", tags: new[] { "ready" });
+//// Comentado para aws
+//.AddCheck<RabbitMqHealthCheck>("rabbitmq", tags: new[] { "ready" })
+//.AddCheck<KafkaHealthCheck>("kafka", tags: new[] { "ready" });
 
 var redisSettings = builder.Configuration
     .GetSection("Redis")
@@ -193,6 +194,9 @@ builder.Services.AddScoped<ICreateOrderValidator, CreateOrderValidator>();
 builder.Services.AddScoped<IGetOrderAuditUseCase, GetOrderAuditUseCase>();
 builder.Services.AddScoped<IOrderAuditReadModelRepository, OrderAuditReadModelRepository>();
 
+var disableHttpsRedirection = builder.Configuration
+    .GetValue<bool>("Hosting:DisableHttpsRedirection");
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -203,7 +207,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-if (!app.Environment.IsDevelopment())
+if (!app.Environment.IsDevelopment() && !disableHttpsRedirection)
 {
     app.UseHttpsRedirection();
 }
