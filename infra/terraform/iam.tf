@@ -337,6 +337,22 @@ data "aws_iam_policy_document" "terraform_plan" {
     resources = ["*"]
   }
 
+  statement {
+    sid    = "ReadOrderFlowServiceDiscovery"
+    effect = "Allow"
+
+    actions = [
+      "servicediscovery:GetNamespace",
+      "servicediscovery:GetService",
+      "servicediscovery:ListInstances",
+      "servicediscovery:ListNamespaces",
+      "servicediscovery:ListServices",
+      "servicediscovery:ListTagsForResource"
+    ]
+
+    resources = ["*"]
+  }
+
 }
 
 resource "aws_iam_role_policy" "terraform_plan" {

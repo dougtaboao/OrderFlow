@@ -98,8 +98,6 @@ resource "aws_service_discovery_service" "dependencies" {
     routing_policy = "MULTIVALUE"
   }
 
-  health_check_custom_config {}
-
   tags = merge(local.common_tags, {
     Name = "orderflow-${var.environment}-dependencies-discovery"
   })
