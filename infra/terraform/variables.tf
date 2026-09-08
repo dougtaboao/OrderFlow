@@ -50,3 +50,9 @@ variable "orderflow_image_tag" {
   type        = string
   default     = "feature-cloud-readiness"
 }
+
+variable "deploy_dependencies" {
+  description = "Controls the temporary SQL Server, Redis and Kafka runtime"
+  type        = bool
+  default     = false
+}

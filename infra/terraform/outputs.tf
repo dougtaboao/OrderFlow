@@ -165,3 +165,12 @@ output "secure_parameter_names" {
     key => parameter.path
   }
 }
+
+output "dependencies_runtime" {
+  description = "Temporary dependency runtime status"
+
+  value = {
+    enabled  = var.deploy_dependencies
+    dns_name = var.deploy_dependencies ? "dependencies.orderflow.internal" : "disabled"
+  }
+}

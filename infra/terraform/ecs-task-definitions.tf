@@ -133,6 +133,10 @@ locals {
         {
           name  = "Redis__OrderCacheExpirationMinutes"
           value = "5"
+        },
+        {
+          name  = "Kafka__BootstrapServers"
+          value = "${local.dependencies_dns_name}:9092"
         }
       ]
     }
@@ -265,6 +269,10 @@ locals {
         {
           name  = "Redis__OrderCacheExpirationMinutes"
           value = "5"
+        },
+        {
+          name  = "Kafka__BootstrapServers"
+          value = "${local.dependencies_dns_name}:9092"
         }
       ]
     }

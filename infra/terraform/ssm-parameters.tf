@@ -5,6 +5,11 @@ locals {
       path             = "/orderflow/${var.environment}/database/connection-string"
     }
 
+    database_password = {
+      environment_name = "MSSQL_SA_PASSWORD"
+      path             = "/orderflow/${var.environment}/database/sa-password"
+    }
+
     jwt = {
       environment_name = "Jwt__SecretKey"
       path             = "/orderflow/${var.environment}/jwt/secret-key"

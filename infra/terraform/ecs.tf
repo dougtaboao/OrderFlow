@@ -17,7 +17,8 @@ locals {
     "grpc",
     "worker",
     "outbox",
-    "kafka-audit"
+    "kafka-audit",
+    "dependencies"
   ])
 }
 
