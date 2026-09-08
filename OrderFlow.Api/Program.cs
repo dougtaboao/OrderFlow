@@ -199,6 +199,27 @@ var disableHttpsRedirection = builder.Configuration
 
 var app = builder.Build();
 
+var runMigrationsOnly = builder.Configuration
+    .GetValue<bool>("Database:RunMigrationsOnly");
+
+if (runMigrationsOnly)
+{
+    app.Logger.LogInformation(
+        "Iniciando aplicação das migrations do OrderFlow.");
+
+    await using var scope = app.Services.CreateAsyncScope();
+
+    var dbContext = scope.ServiceProvider
+        .GetRequiredService<OrderFlowDbContext>();
+
+    await dbContext.Database.MigrateAsync();
+
+    app.Logger.LogInformation(
+        "Migrations do OrderFlow aplicadas com sucesso.");
+
+    return;
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
