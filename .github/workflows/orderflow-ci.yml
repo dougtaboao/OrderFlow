@@ -252,7 +252,7 @@ jobs:
       TF_IN_AUTOMATION: "true"
       TF_INPUT: "false"
       TF_VAR_deploy_dependencies: ${{ vars.TF_DEPLOY_DEPENDENCIES || 'false' }}
-      TF_VAR_deploy_runtime: "false"
+      TF_VAR_deploy_runtime: ${{ vars.TF_DEPLOY_RUNTIME || 'false' }}
 
     steps:
       - name: Checkout repository
